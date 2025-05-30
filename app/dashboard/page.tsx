@@ -7,24 +7,53 @@ import { StatsCards } from "@/components/ui/statsCards"
 import { ProcessTable } from "@/components/ui/processTable"
 import { useProcess } from "@/hooks/useProcess"
 
+import { decodeJwt } from 'jose'
+
+interface TokenPayload {
+  id?: string
+  email?: string
+  role?: string
+  exp?: number
+  iat?: number
+  [key: string]: any
+}
+
 export default function DashboardPage() {
-  const [userEmail, setUserEmail] = useState("")
+  const [userName, setUserName] = useState("")
   const [userRole, setUserRole] = useState("")
   const router = useRouter()
   const { processos, processosStats } = useProcess()
 
+  const decodedToken = (token: string) => {
+    try {
+      return decodeJwt(token) as TokenPayload
+    } catch (error) {
+      console.log("Erro ao decodificar.")
+      return null
+    }
+  }
+
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated")
-    const email = localStorage.getItem("userEmail")
-    const role = localStorage.getItem("role") || ""
+    const username = localStorage.getItem("userName")
+
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      const payload = decodedToken(token)
+
+      if (payload && payload.role) {
+        setUserRole(payload.role)
+      }
+    } else {
+      console.log("Token not found.");
+    }
 
     if (!isAuthenticated) {
       router.push("/")
       return
     }
 
-    setUserEmail(email || "")
-    setUserRole(role)
+    setUserName(username || "")
   }, [router])
 
   const handleLogout = () => {
@@ -34,7 +63,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <DashboardHeader userEmail={userEmail} onLogout={handleLogout} />
+      <DashboardHeader username={userName} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <StatsCards

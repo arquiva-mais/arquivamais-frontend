@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button"
 import { FileText, User, LogOut } from "lucide-react"
 
 interface DashboardHeaderProps {
-  userEmail: string
+   username: string
   onLogout: () => void
 }
 
-export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userEmail, onLogout }) => {
+export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ username, onLogout }) => {
   return (
     <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,9 +20,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userEmail, onL
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-slate-600">
               <User className="w-4 h-4" />
-              <span>{userEmail}</span>
+              <span>{`Olá, ${username}!`}</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={onLogout} className="cursor-pointer">
+            <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLogout}
+            className="cursor-pointer bg-red-500 text-white hover:bg-red-700 rounded-lg transition-all duration-300 hover:text-white">
               <LogOut className="w-4 h-4 mr-2" />
               Sair
             </Button>

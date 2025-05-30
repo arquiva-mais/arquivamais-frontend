@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 interface Processo {
@@ -31,6 +31,8 @@ interface ProcessosTableProps {
 
 export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRole }) => {
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const filteredProcessos = processos.filter(
     (processo) =>
@@ -39,6 +41,16 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
       processo.numero_processo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       processo.responsavel.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const totalPages = Math.ceil(filteredProcessos.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentProcessos = filteredProcessos.slice(startIndex, endIndex)
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    setCurrentPage(1)
+  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -62,7 +74,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
               <Input
                 placeholder="Buscar processos..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10 w-full sm:w-64"
               />
             </div>
@@ -93,14 +105,14 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProcessos.length === 0 ? (
+              {currentProcessos.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     {searchTerm ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredProcessos.map((processo, index) => (
+                currentProcessos.map((processo, index) => (
                   <TableRow key={index} className="hover:bg-slate-50">
                     <TableCell className="font-medium">{processo.numero_processo}</TableCell>
                     <TableCell className="max-w-xs truncate" title={processo.objeto}>
@@ -129,6 +141,52 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
             </TableBody>
           </Table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-slate-600">
+              Mostrando {startIndex + 1} a {Math.min(endIndex, filteredProcessos.length)} de {filteredProcessos.length} processos
+            </p>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Anterior
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className="w-8 h-8 p-0 cursor-pointer"
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="cursor-pointer"
+              >
+                Próxima
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
