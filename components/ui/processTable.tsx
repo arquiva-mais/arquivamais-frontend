@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 interface Processo {
@@ -27,30 +27,43 @@ interface Processo {
 interface ProcessosTableProps {
   processos: Processo[]
   userRole: string
+  isLoading: boolean
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalItems: number
+    itemsPerPage: number
+  }
+  searchTerm: string
+  onPageChange: (page: number) => void
+  onSearch: (search: string) => void
+  onNextPage: () => void
+  onPreviousPage: () => void
 }
 
-export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRole }) => {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+export const ProcessTable: React.FC<ProcessosTableProps> = ({
+  processos,
+  userRole,
+  isLoading,
+  pagination,
+  searchTerm,
+  onPageChange,
+  onSearch,
+  onNextPage,
+  onPreviousPage
+}) => {
+  const [inputValue, setInputValue] = useState(searchTerm)
 
-  const filteredProcessos = processos.filter(
-    (processo) =>
-      processo.objeto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      processo.interessado.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      processo.numero_processo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      processo.responsavel.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== searchTerm) {
+        onSearch(inputValue)
+      }
+    }, 500) // 500ms de delay
 
-  const totalPages = Math.ceil(filteredProcessos.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentProcessos = filteredProcessos.slice(startIndex, endIndex)
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value)
-    setCurrentPage(1)
-  }
+    return () => clearTimeout(timer)
+  }, [inputValue, searchTerm, onSearch])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -67,20 +80,26 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <CardTitle className="text-xl font-semibold">Processos</CardTitle>
+          <CardTitle className="text-xl font-semibold">
+            Processos
+            {isLoading && (
+              <Loader2 className="w-4 h-4 ml-2 animate-spin inline" />
+            )}
+          </CardTitle>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="Buscar processos..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
                 className="pl-10 w-full sm:w-64"
+                disabled={isLoading}
               />
             </div>
             {userRole === "admin" && (
               <Link href="/dashboard/novo-processo">
-                <Button className="w-full sm:w-auto cursor-pointer">
+                <Button className="w-full sm:w-auto cursor-pointer" disabled={isLoading}>
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Processo
                 </Button>
@@ -105,14 +124,25 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentProcessos.length === 0 ? (
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    {Array.from({ length: 8 }).map((_, cellIndex) => (
+                      <TableCell key={cellIndex}>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : processos.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     {searchTerm ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
                   </TableCell>
                 </TableRow>
               ) : (
-                currentProcessos.map((processo, index) => (
+                processos.map((processo, index) => (
                   <TableRow key={index} className="hover:bg-slate-50">
                     <TableCell className="font-medium">{processo.numero_processo}</TableCell>
                     <TableCell className="max-w-xs truncate" title={processo.objeto}>
@@ -142,18 +172,19 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
           </Table>
         </div>
 
-        {totalPages > 1 && (
+        {/* Paginação da API */}
+        {!isLoading && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4">
             <p className="text-sm text-slate-600">
-              Mostrando {startIndex + 1} a {Math.min(endIndex, filteredProcessos.length)} de {filteredProcessos.length} processos
+              Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} a {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} de {pagination.totalItems} processos
             </p>
 
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+                onClick={onPreviousPage}
+                disabled={pagination.currentPage === 1}
                 className="cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -161,24 +192,36 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({ processos, userRol
               </Button>
 
               <div className="flex items-center space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className="w-8 h-8 p-0 cursor-pointer"
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNumber
+                  if (pagination.totalPages <= 5) {
+                    pageNumber = i + 1
+                  } else {
+                    const start = Math.max(1, pagination.currentPage - 2)
+                    pageNumber = start + i
+                  }
+
+                  if (pageNumber > pagination.totalPages) return null
+
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={pagination.currentPage === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onPageChange(pageNumber)}
+                      className="w-8 h-8 p-0 cursor-pointer"
+                    >
+                      {pageNumber}
+                    </Button>
+                  )
+                })}
               </div>
 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                onClick={onNextPage}
+                disabled={pagination.currentPage === pagination.totalPages}
                 className="cursor-pointer"
               >
                 Próxima

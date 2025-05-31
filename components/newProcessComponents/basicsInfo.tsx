@@ -10,21 +10,30 @@ interface InformacoesBasicasProps {
   formData: NovoProcesso
   errors: Record<string, string>
   onInputChange: (field: keyof NovoProcesso, value: string | number) => void
+  isLoading?: boolean,
+  onStopLoading: () => void
 }
 
 export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
   formData,
   errors,
-  onInputChange
+  onInputChange,
+  isLoading,
+  onStopLoading
 }) => {
   const renderError = (field: string) => {
-    if (!errors[field]) return null
-    return (
-      <p className="text-sm text-red-500 flex items-center gap-1">
-        <span className="text-red-500">⚠</span>
-        {errors[field]}
-      </p>
-    )
+    if (!errors[field] || isLoading) {
+      return null
+    } else {
+      onStopLoading()
+      return (
+        <p className="text-sm text-red-500 flex items-center gap-1">
+          <span className="text-red-500">⚠</span>
+          {errors[field]}
+        </p>
+      )
+    }
+
   }
 
   return (

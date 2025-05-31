@@ -20,8 +20,8 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
         <CardTitle>Valores</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="valor_convenio">Valor Convênio</Label>
             <Input
               id="valor_convenio"
@@ -32,7 +32,7 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
               placeholder="0.00"
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="valor_recurso_proprio">Valor Recurso Próprio</Label>
             <Input
               id="valor_recurso_proprio"
@@ -43,7 +43,7 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
               placeholder="0.00"
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="valor_royalties">Valor Royalties</Label>
             <Input
               id="valor_royalties"
@@ -56,10 +56,10 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
           </div>
         </div>
 
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
+        <div className="flex-1 bg-slate-50 p-4 rounded-lg">
+          <div className="flex justify-between items-center bg-black p-2 rounded-2xl text-white">
             <span className="font-medium">Valor Total:</span>
-            <span className="text-xl font-bold text-slate-900">
+            <span className="text-xl font-bold text-slate-900 text-white">
               {new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'

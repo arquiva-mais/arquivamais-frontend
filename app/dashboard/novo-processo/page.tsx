@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Save } from "lucide-react"
+import { Loader2, Save } from "lucide-react"
 import Link from "next/link"
 import { ProcessoHeader } from "@/components/newProcessComponents/headerNewProcess"
 import { InformacoesBasicas } from "@/components/newProcessComponents/basicsInfo"
@@ -22,10 +22,12 @@ export default function NovoProcessoPage() {
     handleInputChange,
     handleNumberChange,
     submitForm,
-    getTotalValue
+    getTotalValue,
+    validateForm
   } = useNewProcess()
 
-  const { showNotification } = useToast() // Muito mais simples!
+  const { showNotification } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated")
@@ -38,12 +40,25 @@ export default function NovoProcessoPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!validateForm()) {
+      setIsLoading(false)
+      return
+    }
+
     submitForm(
       () => {
         showNotification("Processo criado com sucesso!", 'success')
+        setIsLoading(false)
       },
-      (error) => showNotification(error, 'error')
+      (error) => {
+        showNotification(error, 'error')
+        setIsLoading(false)
+      }
     )
+  }
+
+  const handleLoading = () => {
+    setIsLoading(true)
   }
 
   return (
@@ -56,6 +71,8 @@ export default function NovoProcessoPage() {
             formData={formData}
             errors={errors}
             onInputChange={handleInputChange}
+            isLoading={isLoading}
+            onStopLoading={() => setIsLoading(false)}
           />
 
           <ValoresProcesso
@@ -70,9 +87,22 @@ export default function NovoProcessoPage() {
                 Cancelar
               </Button>
             </Link>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto cursor-pointer">
-              <Save className="w-4 h-4 mr-2" />
-              {loading ? "Salvando..." : "Salvar Processo"}
+            <Button
+              type="submit"
+              disabled={loading}
+              onClick={handleLoading}
+              className="w-full sm:w-auto cursor-pointer">
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar Processo
+                </>
+              )}
             </Button>
           </div>
         </form>

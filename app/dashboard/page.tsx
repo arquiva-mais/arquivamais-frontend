@@ -22,13 +22,22 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("")
   const [userRole, setUserRole] = useState("")
   const router = useRouter()
-  const { processos, processosStats } = useProcess()
+  const {
+    processos,
+    isLoading,
+    pagination,
+    processosStats,
+    searchTerm,
+    goToPage,
+    nextPage,
+    previousPage,
+    searchProcessos
+  } = useProcess()
 
   const decodedToken = (token: string) => {
     try {
       return decodeJwt(token) as TokenPayload
     } catch (error) {
-      console.log("Erro ao decodificar.")
       return null
     }
   }
@@ -72,7 +81,17 @@ export default function DashboardPage() {
           processosEmAndamento={processosStats.emAndamento}
         />
 
-        <ProcessTable processos={processos} userRole={userRole} />
+        <ProcessTable
+          processos={processos}
+          userRole={userRole}
+          isLoading={isLoading}
+          pagination={pagination}
+          searchTerm={searchTerm}
+          onPageChange={goToPage}
+          onSearch={searchProcessos}
+          onNextPage={nextPage}
+          onPreviousPage={previousPage}
+        />
       </main>
     </div>
   )

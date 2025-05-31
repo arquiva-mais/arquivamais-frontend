@@ -42,7 +42,6 @@ export const useNewProcess = () => {
 
   const handleInputChange = (field: keyof NovoProcesso, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    // Limpar erro quando campo for alterado
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }))
     }
@@ -84,7 +83,6 @@ export const useNewProcess = () => {
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length > 0) {
-      // Focar no primeiro campo com erro
       const firstErrorField = Object.keys(newErrors)[0]
       const element = document.getElementById(firstErrorField)
       if (element) {
@@ -112,11 +110,9 @@ export const useNewProcess = () => {
         }
       })
 
-      console.log("Criado com sucesso")
       onSuccess?.()
       router.push("/dashboard")
     } catch (error) {
-      console.error("Erro ao salvar processo:", error)
 
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
@@ -126,7 +122,7 @@ export const useNewProcess = () => {
           return
         }
 
-        const errorMessage = error.response?.data?.message || 'Erro ao criar processo'
+        const errorMessage = error.response?.data?.error || 'Erro ao criar processo'
         onError?.(errorMessage)
       } else {
         onError?.('Erro inesperado. Tente novamente.')
@@ -147,6 +143,7 @@ export const useNewProcess = () => {
     handleInputChange,
     handleNumberChange,
     submitForm,
-    getTotalValue
+    getTotalValue,
+    validateForm
   }
 }

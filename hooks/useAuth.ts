@@ -42,7 +42,6 @@ export const useAuth = () => {
       router.push("/dashboard")
       return { success: true }
     } catch (error) {
-      console.error('Erro no login:', error)
 
       let errorMessage = 'Erro inesperado. Tente novamente.'
 

@@ -19,46 +19,141 @@ interface Processo {
   concluido: boolean
 }
 
+interface PaginationInfo {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+}
+
+interface ProcessosResponse {
+  processos?: Processo[]
+  rows?: Processo[]
+  pagination?: PaginationInfo
+  count?: number
+}
+
 export const useProcess = () => {
   const [processos, setProcessos] = useState<Processo[]>([])
-  const [isLoading, setLoading] = useState(false)
+  const [isLoading, setLoading] = useState(true)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10
+  })
+  const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
 
-  const fetchProcessos = async () => {
+  const fetchProcessos = async (page: number = 1, search: string = "") => {
     setLoading(true)
     try {
       const token = localStorage.getItem("authToken")
 
-      const response = await axios.get('http://localhost:3000/processos', {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.itemsPerPage.toString()
+      })
+
+      if (search.trim()) {
+        params.append('busca', search.trim())
+      }
+
+      const response = await axios.get(`http://localhost:3000/processos?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      setProcessos(response.data)
+
+      const data: ProcessosResponse = response.data
+
+      let processosData: Processo[] = []
+      let paginationData: PaginationInfo = {
+        currentPage: page,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: pagination.itemsPerPage
+      }
+
+      if (data.processos) {
+        processosData = data.processos
+        paginationData = data.pagination || {
+          currentPage: page,
+          totalPages: 1,
+          totalItems: data.processos.length,
+          itemsPerPage: 10
+        }
+      } else if (data.rows) {
+        processosData = data.rows
+        paginationData = {
+          currentPage: page,
+          totalPages: Math.ceil((data.count || 0) / pagination.itemsPerPage),
+          totalItems: data.count || 0,
+          itemsPerPage: pagination.itemsPerPage
+        }
+      } else if (Array.isArray(data)) {
+        processosData = data
+        paginationData = {
+          currentPage: page,
+          totalPages: 1,
+          totalItems: data.length,
+          itemsPerPage: pagination.itemsPerPage
+        }
+      }
+
+      setProcessos(processosData)
+      setPagination(paginationData)
+
+      localStorage.setItem("processos", JSON.stringify(processosData))
+      localStorage.setItem("processos_pagination", JSON.stringify(paginationData))
+
     } catch (error) {
-      console.error('Erro ao buscar processos:', error)
 
       if (axios.isAxiosError(error)) {
+
         if (error.response?.status === 401) {
           localStorage.removeItem("authToken")
           localStorage.removeItem("isAuthenticated")
           router.push("/auth/login")
           return
         }
-
-        // Aqui você pode usar o toast em vez de alert
-        const errorMessage = error.response?.data?.message || 'Erro ao carregar processos'
-        console.error(errorMessage)
       }
 
-      // Em caso de erro, usar dados do localStorage se existirem
-      const savedProcessos = localStorage.getItem("processos")
-      if (savedProcessos) {
-        setProcessos(JSON.parse(savedProcessos))
-      }
+      setProcessos([])
+      setPagination({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10
+      })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      fetchProcessos(page, searchTerm)
+    }
+  }
+
+  const searchProcessos = (search: string) => {
+    setSearchTerm(search)
+    fetchProcessos(1, search)
+  }
+
+  // Função para próxima página
+  const nextPage = () => {
+    if (pagination.currentPage < pagination.totalPages) {
+      goToPage(pagination.currentPage + 1)
+    }
+  }
+
+  // Função para página anterior
+  const previousPage = () => {
+    if (pagination.currentPage > 1) {
+      goToPage(pagination.currentPage - 1)
     }
   }
 
@@ -66,16 +161,24 @@ export const useProcess = () => {
     fetchProcessos()
   }, [])
 
+  // Stats calculados de forma segura
   const processosStats = {
-    total: processos.length,
-    concluidos: processos.filter(p => p.concluido).length,
-    emAndamento: processos.filter(p => !p.concluido).length
+    total: pagination?.totalItems || 0,
+    concluidos: (processos || []).filter(p => p?.concluido === true).length,
+    emAndamento: (processos || []).filter(p => p?.concluido === false).length
   }
 
   return {
-    processos,
+    processos: processos || [],
     isLoading,
+    pagination,
     processosStats,
-    refetch: fetchProcessos
+    searchTerm,
+    // Funções de controle
+    goToPage,
+    nextPage,
+    previousPage,
+    searchProcessos,
+    refetch: () => fetchProcessos(pagination?.currentPage || 1, searchTerm)
   }
 }

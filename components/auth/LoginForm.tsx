@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 
 interface LoginFormProps {
@@ -16,6 +16,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError }) => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isNavigateLoding, setIsNavigateLoading] = useState(false)
 
   const { login, loading } = useAuth()
 
@@ -26,7 +27,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError }) => {
 
     if (!result.success && result.error) {
       onError?.(result.error)
+      setIsNavigateLoading(false)
     }
+  }
+
+  const handleNavigate = () => {
+    setIsNavigateLoading(true)
   }
 
   return (
@@ -74,10 +80,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError }) => {
 
       <Button
         type="submit"
+        onClick={handleNavigate}
         className="w-full h-11 text-base font-medium"
         disabled={loading}
       >
-        {loading ? "Entrando..." : "Entrar"}
+        {isNavigateLoding ? (
+          <>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          Entrando...
+          </>
+        ) : (
+          <>
+            Entrar
+          </>
+        )}
       </Button>
     </form>
   )
