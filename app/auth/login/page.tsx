@@ -15,10 +15,10 @@ export default function LoginPage() {
 
   return (
     <>
-      <Card className="border-0 shadow-xl">
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl font-semibold text-center">Entrar</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl font-semibold text-center text-primary">Entrar</CardTitle>
+          <CardDescription className="text-center text-slate-500">
             Digite suas credenciais para acessar o sistema
           </CardDescription>
         </CardHeader>
