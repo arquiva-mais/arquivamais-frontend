@@ -34,6 +34,16 @@ interface ProcessosResponse {
   count?: number
 }
 
+interface ProcessFilters {
+  busca?: string
+  concluido?: boolean | string
+  setor?: string
+  objeto?: string
+  data_inicio?: string
+  data_fim?: string
+  orgao_id?: string
+}
+
 export const useProcess = () => {
   const [processos, setProcessos] = useState<Processo[]>([])
   const [isLoading, setLoading] = useState(true)
@@ -44,13 +54,16 @@ export const useProcess = () => {
     itemsPerPage: 10
   })
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentFilters, setCurrentFilters] = useState<ProcessFilters>({})
   const router = useRouter()
 
-  const fetchProcessos = async (page: number = 1, search: string = "") => {
+  const fetchProcessos = async (
+    page: number = 1,
+    search: string = "",
+    filters: ProcessFilters = {}
+  ) => {
     setLoading(true)
     try {
-      const token = localStorage.getItem("authToken")
-
       const params = new URLSearchParams({
         page: page.toString(),
         limit: pagination.itemsPerPage.toString()
@@ -60,13 +73,26 @@ export const useProcess = () => {
         params.append('busca', search.trim())
       }
 
-      const response = await api.get(`http://localhost:3000/processos?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      if (filters.concluido !== undefined) {
+        params.append('concluido', String(filters.concluido))
+      }
+      if (filters.setor) {
+        params.append('setor', filters.setor)
+      }
+      if (filters.objeto) {
+        params.append('objeto', filters.objeto)
+      }
+      if (filters.data_inicio) {
+        params.append('data_inicio', filters.data_inicio)
+      }
+      if (filters.data_fim) {
+        params.append('data_fim', filters.data_fim)
+      }
+      if (filters.orgao_id) {
+        params.append('orgao_id', filters.orgao_id)
+      }
 
-
+      const response = await api.get(`/processos?${params}`)
       const data: ProcessosResponse = response.data
 
       let processosData: Processo[] = []
@@ -110,9 +136,7 @@ export const useProcess = () => {
       localStorage.setItem("processos_pagination", JSON.stringify(paginationData))
 
     } catch (error) {
-
       if (axios.isAxiosError(error)) {
-
         if (error.response?.status === 401) {
           localStorage.removeItem("authToken")
           localStorage.removeItem("isAuthenticated")
@@ -135,23 +159,31 @@ export const useProcess = () => {
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= pagination.totalPages) {
-      fetchProcessos(page, searchTerm)
+      fetchProcessos(page, searchTerm, currentFilters)
     }
   }
 
   const searchProcessos = (search: string) => {
     setSearchTerm(search)
-    fetchProcessos(1, search)
+    fetchProcessos(1, search, currentFilters)
   }
 
-  // Função para próxima página
+  const applyFilters = (filters: ProcessFilters) => {
+    setCurrentFilters(filters)
+    fetchProcessos(1, searchTerm, filters)
+  }
+
+  const clearFilters = () => {
+    setCurrentFilters({})
+    fetchProcessos(1, searchTerm, {})
+  }
+
   const nextPage = () => {
     if (pagination.currentPage < pagination.totalPages) {
       goToPage(pagination.currentPage + 1)
     }
   }
 
-  // Função para página anterior
   const previousPage = () => {
     if (pagination.currentPage > 1) {
       goToPage(pagination.currentPage - 1)
@@ -162,7 +194,6 @@ export const useProcess = () => {
     fetchProcessos()
   }, [])
 
-  // Stats calculados de forma segura
   const processosStats = {
     total: pagination?.totalItems || 0,
     concluidos: (processos || []).filter(p => p?.concluido === true).length,
@@ -175,11 +206,16 @@ export const useProcess = () => {
     pagination,
     processosStats,
     searchTerm,
-    // Funções de controle
+    currentFilters,
     goToPage,
     nextPage,
     previousPage,
     searchProcessos,
-    refetch: () => fetchProcessos(pagination?.currentPage || 1, searchTerm)
+    fetchProcessos,
+    applyFilters,
+    clearFilters,
+    refetch: () => fetchProcessos(pagination?.currentPage || 1, searchTerm, currentFilters)
   }
 }
+
+export type { ProcessFilters }

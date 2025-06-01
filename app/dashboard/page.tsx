@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/ui/header"
 import { StatsCards } from "@/components/ui/statsCards"
 import { ProcessTable } from "@/components/ui/processTable"
-import { useProcess } from "@/hooks/useProcess"
+import { useProcess, type ProcessFilters } from "@/hooks/useProcess"
 
 import { decodeJwt } from 'jose'
 
@@ -18,20 +18,61 @@ interface TokenPayload {
   [key: string]: any
 }
 
+interface FilterOptions {
+  objetos: string[]
+  status: string[]
+  setores: string[]
+  interessados: string[]
+  responsaveis: string[]
+}
+
+interface SelectedFilters {
+  objeto: string | null
+  status: string | null
+  setor: string | null
+  interessado: string | null
+  responsavel: string | null
+  data_inicio: string | null
+  data_fim: string | null
+}
+
 export default function DashboardPage() {
   const [userName, setUserName] = useState("")
   const [userRole, setUserRole] = useState("")
   const router = useRouter()
+
+  // ✅ Estado atualizado
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
+    objeto: null,
+    status: null,
+    setor: null,
+    interessado: null,
+    responsavel: null,
+    data_inicio: null,
+    data_fim: null,
+  })
+
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    objetos: [],
+    status: ["Concluído", "Em andamento"],
+    setores: [],
+    interessados: [],
+    responsaveis: [],
+  })
+
   const {
     processos,
     isLoading,
     pagination,
     processosStats,
     searchTerm,
+    currentFilters,
     goToPage,
     nextPage,
     previousPage,
-    searchProcessos
+    searchProcessos,
+    applyFilters,
+    clearFilters
   } = useProcess()
 
   const decodedToken = (token: string) => {
@@ -42,11 +83,65 @@ export default function DashboardPage() {
     }
   }
 
+  const handleFilterChange = (filterType: keyof SelectedFilters, value: string | null) => {
+    const newFilters = {
+      ...selectedFilters,
+      [filterType]: value
+    }
+
+    setSelectedFilters(newFilters)
+
+    const backendFilters: ProcessFilters = {}
+
+    if (newFilters.objeto) {
+      backendFilters.objeto = newFilters.objeto
+    }
+
+    if (newFilters.status) {
+      backendFilters.concluido = newFilters.status === "Concluído"
+    }
+
+    if (newFilters.setor) {
+      backendFilters.setor = newFilters.setor
+    }
+
+    if (newFilters.interessado) {
+      backendFilters.busca = newFilters.interessado
+    }
+
+    if (newFilters.data_inicio) {
+      backendFilters.data_inicio = newFilters.data_inicio
+    }
+
+    if (newFilters.data_fim) {
+      backendFilters.data_fim = newFilters.data_fim
+    }
+
+    applyFilters(backendFilters)
+  }
+
+  useEffect(() => {
+    if (processos.length > 0) {
+      const objetos = [...new Set(processos.map(p => p.objeto).filter(Boolean))]
+      const setores = [...new Set(processos.map(p => p.setor_atual).filter(Boolean))]
+      const interessados = [...new Set(processos.map(p => p.interessado).filter(Boolean))]
+      const responsaveis = [...new Set(processos.map(p => p.responsavel).filter(Boolean))]
+
+      setFilterOptions(prev => ({
+        ...prev,
+        objetos,
+        setores,
+        interessados,
+        responsaveis,
+      }))
+    }
+  }, [processos])
+
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated")
     const username = localStorage.getItem("userName")
 
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken")
     if (token) {
       const payload = decodedToken(token)
 
@@ -54,7 +149,7 @@ export default function DashboardPage() {
         setUserRole(payload.role)
       }
     } else {
-      console.log("Token not found.");
+      console.log("Token not found.")
     }
 
     if (!isAuthenticated) {
@@ -91,6 +186,15 @@ export default function DashboardPage() {
           onSearch={searchProcessos}
           onNextPage={nextPage}
           onPreviousPage={previousPage}
+          filterOptions={{
+            objetos: filterOptions.objetos,
+            status: filterOptions.status,
+            setores: filterOptions.setores,
+            interessados: filterOptions.interessados,
+            responsaveis: filterOptions.responsaveis,
+          }}
+          selectedFilters={selectedFilters}
+          onFilterChange={handleFilterChange}
         />
       </main>
     </div>
