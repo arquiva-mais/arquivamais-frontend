@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
+import api from '@/services/api'
 
 export interface NovoProcesso {
   numero_processo: string
@@ -103,7 +104,7 @@ export const useNewProcess = () => {
     try {
       const token = localStorage.getItem("authToken")
 
-      await axios.post('http://localhost:3000/processos', formData, {
+      await api.post('http://localhost:3000/processos', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

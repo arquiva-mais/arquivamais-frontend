@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
+import api from '@/services/api'
 
 interface LoginCredentials {
   email: string
@@ -14,8 +15,9 @@ interface User {
 }
 
 interface LoginResponse {
-  token: string
-  usuario: User
+  accessToken: string,
+  refreshToken: string,
+  user: User
 }
 
 export const useAuth = () => {
@@ -26,18 +28,19 @@ export const useAuth = () => {
     setLoading(true)
 
     try {
-      const response = await axios.post<LoginResponse>('http://localhost:3000/auth/login', credentials)
-      const { token, usuario } = response.data
+      const response = await api.post<LoginResponse>('http://localhost:3000/auth/login', credentials)
+      const { accessToken, user, refreshToken } = response.data
 
       // Armazenar dados de autenticação
-      localStorage.setItem("authToken", token)
+      localStorage.setItem("authToken", accessToken)
       localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("userEmail", usuario.email)
-      localStorage.setItem("userName", usuario.nome || "")
-      localStorage.setItem("role", usuario.role)
+      localStorage.setItem("userEmail", user.email)
+      localStorage.setItem("userName", user.nome || "")
+      localStorage.setItem("role", user.role)
+      localStorage.setItem("refreshToken", refreshToken)
 
       // Configurar header de autorização
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
 
       router.push("/dashboard")
       return { success: true }

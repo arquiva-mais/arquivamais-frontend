@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
+import api from '@/services/api'
 
 interface Processo {
   numero_processo: string
@@ -59,7 +60,7 @@ export const useProcess = () => {
         params.append('busca', search.trim())
       }
 
-      const response = await axios.get(`http://localhost:3000/processos?${params}`, {
+      const response = await api.get(`http://localhost:3000/processos?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

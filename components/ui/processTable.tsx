@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface Processo {
   numero_processo: string
@@ -53,15 +53,17 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   onPreviousPage
 }) => {
   const [inputValue, setInputValue] = useState(searchTerm)
+  const [isLoadingPage, setIsLoadingPage] = useState(false)
 
-  // Debounce para busca
+  const router = useRouter()
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (inputValue !== searchTerm) {
         onSearch(inputValue)
       }
-    }, 500) // 500ms de delay
-
+    }, 500)
+    console.log(isLoadingPage)
     return () => clearTimeout(timer)
   }, [inputValue, searchTerm, onSearch])
 
@@ -70,6 +72,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       style: 'currency',
       currency: 'BRL'
     }).format(value)
+  }
+
+  const handleLoadingPage = () => {
+    setIsLoadingPage(true)
+    router.push('/dashboard/novo-processo')
   }
 
   const getTotalValue = (processo: Processo) => {
@@ -98,12 +105,19 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
               />
             </div>
             {userRole === "admin" && (
-              <Link href="/dashboard/novo-processo">
-                <Button className="w-full sm:w-auto cursor-pointer" disabled={isLoading}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Processo
-                </Button>
-              </Link>
+              <Button onClick={handleLoadingPage} className="w-full sm:w-auto cursor-pointer" disabled={isLoadingPage}>
+                {isLoadingPage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Processo
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
