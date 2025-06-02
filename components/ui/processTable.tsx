@@ -123,6 +123,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const activeFiltersCount = Object.values(selectedFilters).filter(value => value !== null).length;
 
   const clearAllFilters = () => {
+    /*
     const clearedFilters: SelectedFilters = {
       objeto: null,
       status: null,
@@ -132,6 +133,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       data_inicio: null,
       data_fim: null,
     };
+    */
 
     Object.keys(selectedFilters).forEach(key => {
       const filterKey = key as keyof SelectedFilters;

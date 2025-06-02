@@ -15,7 +15,7 @@ interface TokenPayload {
   role?: string
   exp?: number
   iat?: number
-  [key: string]: any
+  [key: string]: string | number | undefined
 }
 
 interface FilterOptions {
@@ -66,19 +66,19 @@ export default function DashboardPage() {
     pagination,
     processosStats,
     searchTerm,
-    currentFilters,
+    //currentFilters,
     goToPage,
     nextPage,
     previousPage,
     searchProcessos,
     applyFilters,
-    clearFilters
+    //clearFilters
   } = useProcess()
 
   const decodedToken = (token: string) => {
     try {
       return decodeJwt(token) as TokenPayload
-    } catch (error) {
+    } catch {
       return null
     }
   }
