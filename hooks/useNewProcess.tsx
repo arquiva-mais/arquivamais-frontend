@@ -104,7 +104,7 @@ export const useNewProcess = () => {
     try {
       const token = localStorage.getItem("authToken")
 
-      await api.post('http://localhost:3000/processos', formData, {
+      await api.post('/processos', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

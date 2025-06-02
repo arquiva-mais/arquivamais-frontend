@@ -28,7 +28,7 @@ export const useAuth = () => {
     setLoading(true)
 
     try {
-      const response = await api.post<LoginResponse>('http://localhost:3000/auth/login', credentials)
+      const response = await api.post<LoginResponse>('/auth/login', credentials)
       const { accessToken, user, refreshToken } = response.data
 
       // Armazenar dados de autenticação

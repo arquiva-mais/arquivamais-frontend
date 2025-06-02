@@ -1,7 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
+const local = 'http://localhost:3000'
+const dev = 'http://143.198.98.233:3000'
+
 const api = axios.create({
-   baseURL: 'http://localhost:3000',
+   baseURL: dev,
 });
 
 let isRefreshing = false;
