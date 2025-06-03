@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X, Edit } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X, Edit, ChevronDown, ChevronUp, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ProcessDetails } from "./processDetails"
 
 interface Processo {
   id?: number,
@@ -91,6 +92,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState(searchTerm)
   const [isLoadingPage, setIsLoadingPage] = useState(false)
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
 
   const router = useRouter()
 
@@ -206,7 +208,6 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       concluido: processo.concluido.toString(),
       mode: 'edit'
     });
-    console.log("OBJETO: ", processo.objeto)
 
     router.push(`/dashboard/novo-processo?${params.toString()}`)
   }
@@ -219,334 +220,414 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Função para expandir/contrair linha
+  const toggleRowExpansion = (index: number) => {
+    const newExpandedRows = new Set(expandedRows)
+    if (newExpandedRows.has(index)) {
+      newExpandedRows.delete(index)
+    } else {
+      newExpandedRows.add(index)
+    }
+    setExpandedRows(newExpandedRows)
+  }
+
+  // Componente para exibir detalhes do processo com animação
+
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <CardTitle className="text-xl font-semibold">
-            Processos
-            {isLoading && (
-              <Loader2 className="w-4 h-4 ml-2 animate-spin inline" />
-            )}
-          </CardTitle>
+    <>
+      {/* Adicione este CSS no início do componente ou em um arquivo CSS global */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <Input
-                placeholder="Buscar processos..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="pl-10 w-full sm:w-64"
-                disabled={isLoading}
-              />
-            </div>
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isLoading} className="relative">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtros
-                  {activeFiltersCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                    >
-                      {activeFiltersCount}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
-                <DropdownMenuSeparator />
+        .animation-delay-100 {
+          animation-delay: 0.1s;
+        }
 
-                {renderFilterSubMenu("objeto", "Objeto", filterOptions.objetos)}
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
 
-                {renderFilterSubMenu("status", "Status", filterOptions.status)}
+        .animation-delay-300 {
+          animation-delay: 0.3s;
+        }
 
-                {renderFilterSubMenu("setor", "Setor", filterOptions.setores)}
+        .chevron-rotate {
+          transition: transform 0.3s ease-in-out;
+        }
 
-                <DropdownMenuSeparator />
+        .chevron-rotate.expanded {
+          transform: rotate(180deg);
+        }
+      `}</style>
 
-                <div className="px-2 py-2">
-                  <div className="text-sm font-medium mb-2">Período de Entrada</div>
-
-                  <div className="mb-2">
-                    <div className="text-xs text-slate-600 mb-1">Data início:</div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-3 h-3" />
-                        <Input
-                          type="date"
-                          placeholder="Data início"
-                          value={selectedFilters.data_inicio || ''}
-                          onChange={(e) => onFilterChange('data_inicio', e.target.value || null)}
-                          className="pl-7 h-8 text-xs"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      {selectedFilters.data_inicio && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onFilterChange('data_inicio', null)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mb-2">
-                    <div className="text-xs text-slate-600 mb-1">Data fim:</div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-3 h-3" />
-                        <Input
-                          type="date"
-                          placeholder="Data fim"
-                          value={selectedFilters.data_fim || ''}
-                          onChange={(e) => onFilterChange('data_fim', e.target.value || null)}
-                          className="pl-7 h-8 text-xs"
-                          disabled={isLoading}
-                          min={selectedFilters.data_inicio || undefined}
-                        />
-                      </div>
-                      {selectedFilters.data_fim && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onFilterChange('data_fim', null)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {(selectedFilters.data_inicio || selectedFilters.data_fim) && (
-                    <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">
-                      <strong>Período:</strong>{' '}
-                      {formatDateLocal(selectedFilters.data_inicio || '')} até {' '}
-                      {formatDateLocal(selectedFilters.data_fim || '')}
-                    </div>
-                  )}
-                </div>
-
-                {hasActiveFilters && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <div className="px-2 py-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearAllFilters}
-                        className="w-full justify-start text-slate-600 hover:text-slate-800"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Limpar todos os filtros
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {userRole === "admin" && (
-              <Button onClick={handleLoadingPage} className="w-full sm:w-auto cursor-pointer" disabled={isLoadingPage}>
-                {isLoadingPage ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Carregando...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Processo
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            <div className="text-sm text-slate-600">Filtros ativos:</div>
-            {Object.entries(selectedFilters).map(([key, value]) => {
-              if (!value) return null;
-
-              const labels = {
-                objeto: 'Objeto',
-                status: 'Status',
-                setor: 'Setor',
-                interessado: 'Interessado',
-                responsavel: 'Responsável',
-                data_inicio: 'Data início',
-                data_fim: 'Data fim'
-              };
-
-              return (
-                <Badge key={key} variant="secondary" className="flex items-center gap-1">
-                  {labels[key as keyof typeof labels]}: {
-                    (key === 'data_inicio' || key === 'data_fim')
-                      ? formatDateLocal(value)
-                      : value
-                  }
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onFilterChange(key as keyof SelectedFilters, null)}
-                    className="h-4 w-4 p-0 hover:bg-transparent"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </Badge>
-              );
-            })}
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Objeto</TableHead>
-                <TableHead>Interessado</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Setor Atual</TableHead>
-                <TableHead>Data Entrada</TableHead>
-                <TableHead>Valor Total</TableHead>
-                <TableHead>Status</TableHead>
-                {userRole === 'admin' ? 'Ação' : ''}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
-                    {Array.from({ length: 8 }).map((_, cellIndex) => (
-                      <TableCell key={cellIndex}>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : processos.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
-                    {searchTerm || hasActiveFilters ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                processos.map((processo, index) => (
-                  <TableRow key={index} className="hover:bg-slate-50">
-                    <TableCell className="font-medium">{processo.numero_processo}</TableCell>
-                    <TableCell className="max-w-xs truncate" title={processo.objeto}>
-                      {processo.objeto}
-                    </TableCell>
-                    <TableCell>{processo.interessado}</TableCell>
-                    <TableCell>{processo.responsavel}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{processo.setor_atual}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {formatDateLocal(processo.data_entrada.split('T')[0])}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(getTotalValue(processo))}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={processo.concluido ? "default" : "secondary"}
-                        className={processo.concluido ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
-                      >
-                        {processo.concluido ? 'Concluído' : 'Em andamento'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {userRole === "admin" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditProcess(processo)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle className="text-xl font-semibold">
+              Processos
+              {isLoading && (
+                <Loader2 className="w-4 h-4 ml-2 animate-spin inline" />
               )}
-            </TableBody>
-          </Table>
-        </div>
+            </CardTitle>
 
-        {!isLoading && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-slate-600">
-              Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} a {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} de {pagination.totalItems} processos
-            </p>
-
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPreviousPage}
-                disabled={pagination.currentPage === 1}
-                className="cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Anterior
-              </Button>
-
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  let pageNumber
-                  if (pagination.totalPages <= 5) {
-                    pageNumber = i + 1
-                  } else {
-                    const start = Math.max(1, pagination.currentPage - 2)
-                    pageNumber = start + i
-                  }
-
-                  if (pageNumber > pagination.totalPages) return null
-
-                  return (
-                    <Button
-                      key={pageNumber}
-                      variant={pagination.currentPage === pageNumber ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onPageChange(pageNumber)}
-                      className="w-8 h-8 p-0 cursor-pointer"
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                })}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar processos..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="pl-10 w-full sm:w-64"
+                  disabled={isLoading}
+                />
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNextPage}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className="cursor-pointer"
-              >
-                Próxima
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={isLoading} className="relative">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filtros
+                    {activeFiltersCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                      >
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {renderFilterSubMenu("objeto", "Objeto", filterOptions.objetos)}
+
+                  {renderFilterSubMenu("status", "Status", filterOptions.status)}
+
+                  {renderFilterSubMenu("setor", "Setor", filterOptions.setores)}
+
+                  <DropdownMenuSeparator />
+
+                  <div className="px-2 py-2">
+                    <div className="text-sm font-medium mb-2">Período de Entrada</div>
+
+                    <div className="mb-2">
+                      <div className="text-xs text-slate-600 mb-1">Data início:</div>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-3 h-3" />
+                          <Input
+                            type="date"
+                            placeholder="Data início"
+                            value={selectedFilters.data_inicio || ''}
+                            onChange={(e) => onFilterChange('data_inicio', e.target.value || null)}
+                            className="pl-7 h-8 text-xs"
+                            disabled={isLoading}
+                          />
+                        </div>
+                        {selectedFilters.data_inicio && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onFilterChange('data_inicio', null)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-2">
+                      <div className="text-xs text-slate-600 mb-1">Data fim:</div>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-3 h-3" />
+                          <Input
+                            type="date"
+                            placeholder="Data fim"
+                            value={selectedFilters.data_fim || ''}
+                            onChange={(e) => onFilterChange('data_fim', e.target.value || null)}
+                            className="pl-7 h-8 text-xs"
+                            disabled={isLoading}
+                            min={selectedFilters.data_inicio || undefined}
+                          />
+                        </div>
+                        {selectedFilters.data_fim && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onFilterChange('data_fim', null)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {(selectedFilters.data_inicio || selectedFilters.data_fim) && (
+                      <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">
+                        <strong>Período:</strong>{' '}
+                        {formatDateLocal(selectedFilters.data_inicio || '')} até {' '}
+                        {formatDateLocal(selectedFilters.data_fim || '')}
+                      </div>
+                    )}
+                  </div>
+
+                  {hasActiveFilters && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="w-full justify-start text-slate-600 hover:text-slate-800"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Limpar todos os filtros
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {userRole === "admin" && (
+                <Button onClick={handleLoadingPage} className="w-full sm:w-auto cursor-pointer" disabled={isLoadingPage}>
+                  {isLoadingPage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Carregando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Processo
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              <div className="text-sm text-slate-600">Filtros ativos:</div>
+              {Object.entries(selectedFilters).map(([key, value]) => {
+                if (!value) return null;
+
+                const labels = {
+                  objeto: 'Objeto',
+                  status: 'Status',
+                  setor: 'Setor',
+                  interessado: 'Interessado',
+                  responsavel: 'Responsável',
+                  data_inicio: 'Data início',
+                  data_fim: 'Data fim'
+                };
+
+                return (
+                  <Badge key={key} variant="secondary" className="flex items-center gap-1">
+                    {labels[key as keyof typeof labels]}: {
+                      (key === 'data_inicio' || key === 'data_fim')
+                        ? formatDateLocal(value)
+                        : value
+                    }
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onFilterChange(key as keyof SelectedFilters, null)}
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
+        </CardHeader>
+
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Objeto</TableHead>
+                  <TableHead>Interessado</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead>Setor Atual</TableHead>
+                  <TableHead>Data Entrada</TableHead>
+                  <TableHead>Valor Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  {userRole === 'admin' && <TableHead>Ação</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      {Array.from({ length: userRole === 'admin' ? 10 : 9 }).map((_, cellIndex) => (
+                        <TableCell key={cellIndex}>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : processos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="text-center py-8 text-slate-500">
+                      {searchTerm || hasActiveFilters ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  processos.map((processo, index) => (
+                    <>
+                      {/* Linha principal */}
+                      <TableRow key={`processo-${index}`} className="hover:bg-slate-50 transition-colors duration-200">
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleRowExpansion(index)}
+                            className="h-6 w-6 p-0 hover:bg-slate-200 transition-all duration-200"
+                          >
+                            <ChevronDown
+                              className={`w-4 h-4 chevron-rotate ${expandedRows.has(index) ? 'expanded' : ''}`}
+                            />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="font-medium">{processo.numero_processo}</TableCell>
+                        <TableCell className="max-w-xs truncate" title={processo.objeto}>
+                          {processo.objeto}
+                        </TableCell>
+                        <TableCell>{processo.interessado}</TableCell>
+                        <TableCell>{processo.responsavel}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{processo.setor_atual}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {formatDateLocal(processo.data_entrada.split('T')[0])}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(getTotalValue(processo))}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={processo.concluido ? "default" : "secondary"}
+                            className={processo.concluido ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
+                          >
+                            {processo.concluido ? 'Concluído' : 'Em andamento'}
+                          </Badge>
+                        </TableCell>
+                        {userRole === "admin" && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditProcess(processo)}
+                              className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors duration-200"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+
+                      {/* Linha expandida com detalhes animados */}
+                      <TableRow key={`details-${index}`}>
+                        <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="p-0">
+                          <ProcessDetails
+                            processo={processo}
+                            isExpanded={expandedRows.has(index)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {!isLoading && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-slate-600">
+                Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} a {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} de {pagination.totalItems} processos
+              </p>
+
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPreviousPage}
+                  disabled={pagination.currentPage === 1}
+                  className="cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNumber
+                    if (pagination.totalPages <= 5) {
+                      pageNumber = i + 1
+                    } else {
+                      const start = Math.max(1, pagination.currentPage - 2)
+                      pageNumber = start + i
+                    }
+
+                    if (pageNumber > pagination.totalPages) return null
+
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={pagination.currentPage === pageNumber ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => onPageChange(pageNumber)}
+                        className="w-8 h-8 p-0 cursor-pointer"
+                      >
+                        {pageNumber}
+                      </Button>
+                    )
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNextPage}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="cursor-pointer"
+                >
+                  Próxima
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   )
 }

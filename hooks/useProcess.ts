@@ -131,7 +131,6 @@ export const useProcess = () => {
 
       setProcessos(processosData)
       setPagination(paginationData)
-      console.log(processosData)
       localStorage.setItem("processos", JSON.stringify(processosData))
       localStorage.setItem("processos_pagination", JSON.stringify(paginationData))
 

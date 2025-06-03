@@ -17,6 +17,7 @@ export interface NovoProcesso {
   valor_convenio: number
   valor_recurso_proprio: number
   valor_royalties: number
+  concluido?: boolean
 }
 
 const initialFormData: NovoProcesso = {

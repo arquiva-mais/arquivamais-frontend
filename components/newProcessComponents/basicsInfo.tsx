@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { OBJETOS_PROCESSO, SETORES, MESES } from "@/utils/newProcessConsts"
+import { Checkbox } from "@/components/ui/Checkbox"
 import { NovoProcesso } from "@/hooks/useNewProcess"
 
 interface InformacoesBasicasProps {
@@ -23,11 +24,6 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
   isEditMode = false,
   onStopLoading
 }) => {
-  console.log('formData.competencia:', formData.competencia)
-  console.log('MESES disponíveis:', MESES)
-  console.log('formData.objeto:', formData.objeto)
-  console.log('OBJETOS_PROCESSO disponíveis:')
-
   const renderError = (field: string) => {
     if (isEditMode || !errors[field] || isLoading) {
       return null
@@ -208,6 +204,24 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
             placeholder="Observações adicionais..."
             rows={3}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="concluido" className="text-sm font-medium">
+            Status do Processo
+          </Label>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="concluido"
+              checked={formData.concluido}
+              onCheckedChange={(checked) =>
+                (onInputChange as any)("concluido", checked)
+              }
+            />
+            <span className="text-sm text-gray-600">
+              Marcar como processo concluído
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
