@@ -37,6 +37,7 @@ const initialFormData: NovoProcesso = {
 
 export const useNewProcess = () => {
   const [formData, setFormData] = useState<NovoProcesso>(initialFormData)
+  const [editFormData, setEditFormData] = useState<NovoProcesso>(initialFormData)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
@@ -133,18 +134,93 @@ export const useNewProcess = () => {
     }
   }
 
+  const editForm = async (editFormData: any, idProcess?: number, onSuccess?: () => void, onError?: (message: string) => void) => {
+    //if (!validateForm()) return
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem("authToken")
+
+      await api.put(`/processos/${idProcess}`, editFormData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      onSuccess?.()
+      router.push("/dashboard")
+    } catch (error) {
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("authToken")
+          localStorage.removeItem("isAuthenticated")
+          router.push("/")
+          return
+        }
+
+        const errorMessage = error.response?.data?.error || 'Erro ao criar processo'
+        onError?.(errorMessage)
+      } else {
+        onError?.('Erro inesperado. Tente novamente.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deletProcess = async (idProcess?: number, onSuccess?: () => void, onError?: (message: string) => void) => {
+    //if (!validateForm()) return
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem("authToken")
+
+      await api.delete(`/processos/${idProcess}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      onSuccess?.()
+      router.push("/dashboard")
+    } catch (error) {
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("authToken")
+          localStorage.removeItem("isAuthenticated")
+          router.push("/")
+          return
+        }
+
+        const errorMessage = error.response?.data?.error || 'Erro ao criar processo'
+        onError?.(errorMessage)
+      } else {
+        onError?.('Erro inesperado. Tente novamente.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const getTotalValue = () => {
     return (formData.valor_convenio || 0) + (formData.valor_recurso_proprio || 0) + (formData.valor_royalties || 0)
   }
 
   return {
     formData,
+    editFormData,
     loading,
     errors,
     handleInputChange,
     handleNumberChange,
     submitForm,
     getTotalValue,
-    validateForm
+    validateForm,
+    editForm,
+    deletProcess
   }
 }

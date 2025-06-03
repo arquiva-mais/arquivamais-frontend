@@ -11,7 +11,8 @@ interface InformacoesBasicasProps {
   errors: Record<string, string>
   onInputChange: (field: keyof NovoProcesso, value: string | number) => void
   isLoading?: boolean,
-  onStopLoading: () => void
+  onStopLoading: () => void,
+  isEditMode: boolean
 }
 
 export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
@@ -19,10 +20,16 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
   errors,
   onInputChange,
   isLoading,
+  isEditMode = false,
   onStopLoading
 }) => {
+  console.log('formData.competencia:', formData.competencia)
+  console.log('MESES disponíveis:', MESES)
+  console.log('formData.objeto:', formData.objeto)
+  console.log('OBJETOS_PROCESSO disponíveis:')
+
   const renderError = (field: string) => {
-    if (!errors[field] || isLoading) {
+    if (isEditMode || !errors[field] || isLoading) {
       return null
     } else {
       onStopLoading()
@@ -33,7 +40,11 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
         </p>
       )
     }
+  }
 
+  // Função para aplicar classes de erro condicionalmente
+  const getErrorClass = (field: string) => {
+    return !isEditMode && errors[field] ? 'border-red-500 focus:border-red-500' : ''
   }
 
   return (
@@ -50,7 +61,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               value={formData.numero_processo}
               onChange={(e) => onInputChange("numero_processo", e.target.value)}
               placeholder="2025/007891"
-              className={`bg-slate-50 ${errors.numero_processo ? 'border-red-500 focus:border-red-500' : ''}`}
+              className={`bg-slate-50 ${getErrorClass("numero_processo")}`}
             />
             {renderError("numero_processo")}
           </div>
@@ -62,7 +73,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               type="date"
               value={formData.data_entrada}
               onChange={(e) => onInputChange("data_entrada", e.target.value)}
-              className={errors.data_entrada ? 'border-red-500 focus:border-red-500' : ''}
+              className={getErrorClass("data_entrada")}
             />
             {renderError("data_entrada")}
           </div>
@@ -75,7 +86,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
             >
               <SelectTrigger
                 id="competencia"
-                className={errors.competencia ? 'border-red-500 focus:border-red-500' : ''}
+                className={getErrorClass("competencia")}
               >
                 <SelectValue placeholder="Selecione a competência" />
               </SelectTrigger>
@@ -99,7 +110,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           >
             <SelectTrigger
               id="objeto"
-              className={errors.objeto ? 'border-red-500 focus:border-red-500' : ''}
+              className={getErrorClass("objeto")}
             >
               <SelectValue placeholder="Selecione o objeto" />
             </SelectTrigger>
@@ -122,7 +133,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               value={formData.interessado}
               onChange={(e) => onInputChange("interessado", e.target.value)}
               placeholder="Ex: Secretaria de Educação"
-              className={errors.interessado ? 'border-red-500 focus:border-red-500' : ''}
+              className={getErrorClass("interessado")}
             />
             {renderError("interessado")}
           </div>
@@ -134,7 +145,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               value={formData.orgao_gerador}
               onChange={(e) => onInputChange("orgao_gerador", e.target.value)}
               placeholder="Ex: Secretaria de Educação"
-              className={errors.orgao_gerador ? 'border-red-500 focus:border-red-500' : ''}
+              className={getErrorClass("orgao_gerador")}
             />
             {renderError("orgao_gerador")}
           </div>
@@ -148,7 +159,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               value={formData.responsavel}
               onChange={(e) => onInputChange("responsavel", e.target.value)}
               placeholder="Nome do responsável"
-              className={errors.responsavel ? 'border-red-500 focus:border-red-500' : ''}
+              className={getErrorClass("responsavel")}
             />
             {renderError("responsavel")}
           </div>
@@ -161,7 +172,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
             >
               <SelectTrigger
                 id="setor_atual"
-                className={errors.setor_atual ? 'border-red-500 focus:border-red-500' : ''}
+                className={getErrorClass("setor_atual")}
               >
                 <SelectValue placeholder="Selecione o setor" />
               </SelectTrigger>

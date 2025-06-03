@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X, Edit } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 interface Processo {
+  id?: number,
   numero_processo: string
   data_entrada: string
   competencia: string
@@ -185,6 +186,30 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     );
   };
 
+  const handleEditProcess = (processo: Processo) => {
+
+    const params = new URLSearchParams({
+      id: processo.id?.toString() || '',
+      numero_processo: processo.numero_processo,
+      data_entrada: processo.data_entrada,
+      competencia: processo.competencia,
+      objeto: processo.objeto,
+      interessado: processo.interessado,
+      orgao_gerador: processo.orgao_gerador,
+      responsavel: processo.responsavel,
+      setor_atual: processo.setor_atual,
+      descricao: processo.descricao,
+      observacao: processo.observacao,
+      valor_convenio: processo.valor_convenio.toString(),
+      valor_recurso_proprio: processo.valor_recurso_proprio.toString(),
+      valor_royalties: processo.valor_royalties.toString(),
+      concluido: processo.concluido.toString(),
+      mode: 'edit'
+    });
+    console.log("OBJETO: ", processo.objeto)
+
+    router.push(`/dashboard/novo-processo?${params.toString()}`)
+  }
   const formatDateLocal = (dateString: string) => {
     if (!dateString) return '...';
 
@@ -399,6 +424,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 <TableHead>Data Entrada</TableHead>
                 <TableHead>Valor Total</TableHead>
                 <TableHead>Status</TableHead>
+                {userRole === 'admin' ? 'Ação' : ''}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -443,6 +469,18 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                       >
                         {processo.concluido ? 'Concluído' : 'Em andamento'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {userRole === "admin" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditProcess(processo)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
