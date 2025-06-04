@@ -499,69 +499,64 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  processos.map((processo, index) => (
-                    <>
-                      {/* Linha principal */}
-                      <TableRow key={`processo-${index}`} className="hover:bg-slate-50 transition-colors duration-200">
+                  processos.flatMap((processo, index) => [
+                    <TableRow key={`main-${processo.id || index}`} className="hover:bg-slate-50">
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRowExpansion(index)}
+                          className="h-6 w-6 p-0 hover:bg-slate-200 transition-all duration-200"
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 chevron-rotate ${expandedRows.has(index) ? 'expanded' : ''}`}
+                          />
+                        </Button>
+                      </TableCell>
+                      <TableCell className="font-medium">{processo.numero_processo}</TableCell>
+                      <TableCell className="max-w-xs truncate" title={processo.objeto}>
+                        {processo.objeto}
+                      </TableCell>
+                      <TableCell>{processo.interessado}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{processo.orgao_gerador}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{processo.setor_atual}</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(getTotalValue(processo))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={processo.concluido ? "default" : "secondary"}
+                          className={processo.concluido ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
+                        >
+                          {processo.concluido ? 'Concluído' : 'Em andamento'}
+                        </Badge>
+                      </TableCell>
+                      {userRole === "admin" && (
                         <TableCell>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => toggleRowExpansion(index)}
-                            className="h-6 w-6 p-0 hover:bg-slate-200 transition-all duration-200"
+                            onClick={() => handleEditProcess(processo)}
+                            className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors duration-200"
                           >
-                            <ChevronDown
-                              className={`w-4 h-4 chevron-rotate ${expandedRows.has(index) ? 'expanded' : ''}`}
-                            />
+                            <Edit className="w-4 h-4" />
                           </Button>
                         </TableCell>
-                        <TableCell className="font-medium">{processo.numero_processo}</TableCell>
-                        <TableCell className="max-w-xs truncate" title={processo.objeto}>
-                          {processo.objeto}
-                        </TableCell>
-                        <TableCell>{processo.interessado}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{processo.orgao_gerador}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{processo.setor_atual}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(getTotalValue(processo))}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={processo.concluido ? "default" : "secondary"}
-                            className={processo.concluido ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
-                          >
-                            {processo.concluido ? 'Concluído' : 'Em andamento'}
-                          </Badge>
-                        </TableCell>
-                        {userRole === "admin" && (
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditProcess(processo)}
-                              className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors duration-200"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-
-                      {/* Linha expandida com detalhes animados */}
-                      <TableRow key={`details-${index}`}>
-                        <TableCell colSpan={userRole === 'admin' ? 9 : 8} className="p-0">
-                          <ProcessDetails
-                            processo={processo}
-                            isExpanded={expandedRows.has(index)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    </>
-                  ))
+                      )}
+                    </TableRow>,
+                    <TableRow key={`details-${processo.id || index}`}>
+                      <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="p-0">
+                        <ProcessDetails
+                          processo={processo}
+                          isExpanded={expandedRows.has(index)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ])
                 )}
               </TableBody>
             </Table>
