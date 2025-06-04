@@ -474,9 +474,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   <TableHead>Número</TableHead>
                   <TableHead>Objeto</TableHead>
                   <TableHead>Interessado</TableHead>
-                  <TableHead>Responsável</TableHead>
+                  <TableHead>Órgão Gerador</TableHead>
                   <TableHead>Setor Atual</TableHead>
-                  <TableHead>Data Entrada</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Status</TableHead>
                   {userRole === 'admin' && <TableHead>Ação</TableHead>}
@@ -486,7 +485,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
-                      {Array.from({ length: userRole === 'admin' ? 10 : 9 }).map((_, cellIndex) => (
+                      {Array.from({ length: userRole === 'admin' ? 9 : 8 }).map((_, cellIndex) => (
                         <TableCell key={cellIndex}>
                           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                         </TableCell>
@@ -495,7 +494,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   ))
                 ) : processos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={userRole === 'admin' ? 9 : 8} className="text-center py-8 text-slate-500">
                       {searchTerm || hasActiveFilters ? "Nenhum processo encontrado" : "Nenhum processo cadastrado"}
                     </TableCell>
                   </TableRow>
@@ -521,12 +520,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           {processo.objeto}
                         </TableCell>
                         <TableCell>{processo.interessado}</TableCell>
-                        <TableCell>{processo.responsavel}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{processo.setor_atual}</Badge>
+                          <Badge variant="outline">{processo.orgao_gerador}</Badge>
                         </TableCell>
                         <TableCell>
-                          {formatDateLocal(processo.data_entrada.split('T')[0])}
+                          <Badge variant="outline">{processo.setor_atual}</Badge>
                         </TableCell>
                         <TableCell className="font-medium">
                           {formatCurrency(getTotalValue(processo))}
@@ -555,7 +553,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 
                       {/* Linha expandida com detalhes animados */}
                       <TableRow key={`details-${index}`}>
-                        <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="p-0">
+                        <TableCell colSpan={userRole === 'admin' ? 9 : 8} className="p-0">
                           <ProcessDetails
                             processo={processo}
                             isExpanded={expandedRows.has(index)}
