@@ -46,7 +46,7 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
         <div className="mb-6 text-sm text-gray-700">
           <p>{message}</p>
           {itemName && (
-            <p className="mt-2 font-medium text-gray-900">"{itemName}"</p>
+            <p className="mt-2 font-medium text-gray-900">{`"${itemName}"`}</p>
           )}
           <p className="mt-2 text-xs text-red-500">
             Esta ação não pode ser desfeita.

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X, Edit, ChevronDown, ChevronUp, Eye } from "lucide-react"
+import { Plus, Search, ChevronLeft, ChevronRight, Loader2, Filter, Calendar, X, Edit, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,

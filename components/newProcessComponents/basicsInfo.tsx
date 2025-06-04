@@ -215,7 +215,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               id="concluido"
               checked={formData.concluido}
               onCheckedChange={(checked) =>
-                (onInputChange as any)("concluido", checked)
+                onInputChange("concluido", String(checked))
               }
             />
             <span className="text-sm text-gray-600">
