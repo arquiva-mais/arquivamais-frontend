@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
@@ -11,11 +12,22 @@ import { ProcessoHeader } from "@/components/newProcessComponents/headerNewProce
 import { InformacoesBasicas } from "@/components/newProcessComponents/basicsInfo"
 import { ValoresProcesso } from "@/components/newProcessComponents/valueProcess"
 import { useNewProcess } from "@/hooks/useNewProcess"
-//import { useNotification } from "@/hooks/useNotification"
-//import { ToastContainer } from "@/components/containers/toastContainer"
 import { useToast } from "@/components/providers/toastProvider"
 
-export default function NovoProcessoPage() {
+// Componente de Loading
+function LoadingPage() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Carregando página...</p>
+      </div>
+    </div>
+  )
+}
+
+// Componente principal com todo o código existente
+function NovoProcessoPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const {
@@ -35,7 +47,6 @@ export default function NovoProcessoPage() {
   const [isDeletedClick, setIsDeletedClick] = useState(false)
   const isEditMode = searchParams.get('mode') === 'edit';
   const [editFormData, setEditFormData] = useState(() => {
-
     if (isEditMode) {
       return {
         id: searchParams.get('id') || '',
@@ -82,7 +93,7 @@ export default function NovoProcessoPage() {
       return
     }
   }, [router])
-  console.log(editFormData)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -133,14 +144,12 @@ export default function NovoProcessoPage() {
 
   const handleConfirmDelete = () => {
     console.log('Excluindo processo:', editFormData.id)
-
     deletProcess(Number(editFormData.id))
-
     showNotification("Processo excluído com sucesso!", 'success')
     setIsDeletedClick(false)
   }
 
-  const handleEditInputChange = (field: string, value: string | number) => {
+  const handleEditInputChange = (field: string, value: string | number | boolean) => {
     setEditFormData(prev => ({
       ...prev,
       [field]: value
@@ -158,7 +167,6 @@ export default function NovoProcessoPage() {
       (editFormData.valor_royalties || 0);
   };
 
-  console.log("Edit form data: ", editFormData)
   return (
     <div className="min-h-screen bg-slate-50">
       <ProcessoHeader isEditMode={isEditMode} />
@@ -213,17 +221,6 @@ export default function NovoProcessoPage() {
                   className="w-full sm:w-auto cursor-pointer bg-red-500 text-white hover:bg-red-800 duration-500">
                   Excluir
                 </Button>
-                {isDeletedClick ? (
-                  <DeleteModal
-                    isOpen={false}
-                    onClose={function (): void {
-                      throw new Error("Function not implemented.")
-                    }} onConfirm={function (): void {
-                      throw new Error("Function not implemented.")
-                    }}></DeleteModal>
-                ) : (
-                  ''
-                )}
                 <Button
                   type="submit"
                   disabled={loading}
@@ -274,5 +271,14 @@ export default function NovoProcessoPage() {
         itemName={`${editFormData.numero_processo} - ${editFormData.objeto}`}
       />
     </div>
+  )
+}
+
+// Página principal exportada com Suspense
+export default function NovoProcessoPage() {
+  return (
+    <Suspense fallback={<LoadingPage />}>
+      <NovoProcessoPageContent />
+    </Suspense>
   )
 }
