@@ -46,6 +46,14 @@ function NovoProcessoPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDeletedClick, setIsDeletedClick] = useState(false)
   const isEditMode = searchParams.get('mode') === 'edit';
+
+  const validateStatus = (status: string | null): 'em_andamento' | 'concluido' | 'cancelado' => {
+    if (status === 'em_andamento' || status === 'concluido' || status === 'cancelado') {
+      return status;
+    }
+    return 'em_andamento'; // padrão se inválido
+  };
+
   const [editFormData, setEditFormData] = useState(() => {
     if (isEditMode) {
       return {
@@ -63,7 +71,7 @@ function NovoProcessoPageContent() {
         valor_convenio: parseFloat(searchParams.get('valor_convenio') || '0'),
         valor_recurso_proprio: parseFloat(searchParams.get('valor_recurso_proprio') || '0'),
         valor_royalties: parseFloat(searchParams.get('valor_royalties') || '0'),
-        concluido: searchParams.get('concluido') === 'true',
+        status: validateStatus(searchParams.get('status')),
       };
     }
 
@@ -82,7 +90,7 @@ function NovoProcessoPageContent() {
       valor_convenio: 0,
       valor_recurso_proprio: 0,
       valor_royalties: 0,
-      concluido: false,
+      status: 'em_andamento' as const,
     };
   });
 

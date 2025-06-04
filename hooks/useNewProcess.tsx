@@ -17,7 +17,7 @@ export interface NovoProcesso {
   valor_convenio: number
   valor_recurso_proprio: number
   valor_royalties: number
-  concluido?: boolean
+  status: 'em_andamento' | 'concluido' | 'cancelado'
 }
 
 const initialFormData: NovoProcesso = {
@@ -34,6 +34,7 @@ const initialFormData: NovoProcesso = {
   valor_convenio: 0,
   valor_recurso_proprio: 0,
   valor_royalties: 0,
+  status: 'em_andamento'
 }
 
 export const useNewProcess = () => {
@@ -75,9 +76,6 @@ export const useNewProcess = () => {
     }
     if (!formData.orgao_gerador.trim()) {
       newErrors.orgao_gerador = 'Órgão Gerador é obrigatório'
-    }
-    if (!formData.responsavel.trim()) {
-      newErrors.responsavel = 'Responsável é obrigatório'
     }
     if (!formData.setor_atual) {
       newErrors.setor_atual = 'Setor Atual é obrigatório'

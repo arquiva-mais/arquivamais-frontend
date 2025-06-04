@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     objetos: [],
-    status: ["Concluído", "Em andamento"],
+    status: ["Concluído", "Em andamento", "Cancelado"],
     setores: [],
     interessados: [],
     responsaveis: [],

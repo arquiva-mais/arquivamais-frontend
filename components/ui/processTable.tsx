@@ -34,7 +34,7 @@ interface Processo {
   valor_convenio: number
   valor_recurso_proprio: number
   valor_royalties: number
-  concluido: boolean
+  status: 'em_andamento' | 'concluido' | 'cancelado'
 }
 
 interface FilterOptions {
@@ -152,6 +152,17 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     options: string[]
   ) => {
     const selectedValue = selectedFilters[filterType];
+
+    const getStatusLabel = (status: string) => {
+      console.log(status)
+      switch (status) {
+        case 'em_andamento': return 'Em andamento'
+        case 'concluido': return 'Concluído'
+        case 'cancelado': return 'Cancelado'
+        default: return status
+      }
+    }
+
     return (
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
@@ -160,7 +171,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             {selectedValue && (
               <div className="flex items-center gap-1">
                 <Badge variant="secondary" className="text-xs">
-                  {selectedValue}
+                  {filterType === 'status' ? getStatusLabel(selectedValue) : selectedValue}
                 </Badge>
               </div>
             )}
@@ -180,7 +191,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
               checked={selectedValue === option}
               onCheckedChange={() => onFilterChange(filterType, option)}
             >
-              {option}
+              {filterType === 'status' ? getStatusLabel(option) : option}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuSubContent>
@@ -205,7 +216,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       valor_convenio: processo.valor_convenio.toString(),
       valor_recurso_proprio: processo.valor_recurso_proprio.toString(),
       valor_royalties: processo.valor_royalties.toString(),
-      concluido: processo.concluido.toString(),
+      status: processo.status,
       mode: 'edit'
     });
 
@@ -233,6 +244,30 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 
   // Componente para exibir detalhes do processo com animação
 
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'concluido':
+        return {
+          label: 'Concluído',
+          variant: 'default' as const,
+          className: 'bg-green-100 text-green-800 hover:bg-green-200'
+        }
+      case 'cancelado':
+        return {
+          label: 'Cancelado',
+          variant: 'destructive' as const,
+          className: 'bg-red-100 text-red-800 hover:bg-red-200'
+        }
+      case 'em_andamento':
+      default:
+        return {
+          label: 'Em andamento',
+          variant: 'secondary' as const,
+          className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+        }
+    }
+  }
 
   return (
     <>
@@ -528,12 +563,17 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         {formatCurrency(getTotalValue(processo))}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={processo.concluido ? "default" : "secondary"}
-                          className={processo.concluido ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
-                        >
-                          {processo.concluido ? 'Concluído' : 'Em andamento'}
-                        </Badge>
+                        {(() => {
+                          const statusConfig = getStatusConfig(processo.status)
+                          return (
+                            <Badge
+                              variant={statusConfig.variant}
+                              className={statusConfig.className}
+                            >
+                              {statusConfig.label}
+                            </Badge>
+                          )
+                        })()}
                       </TableCell>
                       {userRole === "admin" && (
                         <TableCell>

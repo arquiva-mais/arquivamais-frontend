@@ -17,7 +17,7 @@ interface Processo {
   valor_convenio: number
   valor_recurso_proprio: number
   valor_royalties: number
-  concluido: boolean
+  status: 'em_andamento' | 'concluido' | 'cancelado'
 }
 
 interface PaginationInfo {
@@ -195,8 +195,9 @@ export const useProcess = () => {
 
   const processosStats = {
     total: pagination?.totalItems || 0,
-    concluidos: (processos || []).filter(p => p?.concluido === true).length,
-    emAndamento: (processos || []).filter(p => p?.concluido === false).length
+    concluidos: (processos || []).filter(p => p?.status === 'concluido').length,
+    emAndamento: (processos || []).filter(p => p?.status === 'em_andamento').length,
+    cancelado: (processos || []).filter(p => p?.status === 'cancelado').length
   }
 
   return {

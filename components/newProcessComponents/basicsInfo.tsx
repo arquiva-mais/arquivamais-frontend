@@ -4,8 +4,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { OBJETOS_PROCESSO, SETORES, MESES } from "@/utils/newProcessConsts"
-import { Checkbox } from "@/components/ui/Checkbox"
 import { NovoProcesso } from "@/hooks/useNewProcess"
+
+// Constantes para os status
+const STATUS_OPTIONS = [
+  { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'concluido', label: 'Concluído' },
+  { value: 'cancelado', label: 'Cancelado' }
+]
 
 interface InformacoesBasicasProps {
   formData: NovoProcesso
@@ -149,7 +155,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável *</Label>
+            <Label htmlFor="responsavel">Responsável</Label>
             <Input
               id="responsavel"
               value={formData.responsavel}
@@ -206,22 +212,42 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           />
         </div>
 
+        {/* Substituir checkbox por dropdown */}
         <div className="space-y-2">
-          <Label htmlFor="concluido" className="text-sm font-medium">
-            Status do Processo
+          <Label htmlFor="status" className="text-sm font-medium">
+            Status do Processo *
           </Label>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="concluido"
-              checked={formData.concluido}
-              onCheckedChange={(checked) =>
-                onInputChange("concluido", String(checked))
-              }
-            />
-            <span className="text-sm text-gray-600">
-              Marcar como processo concluído
-            </span>
-          </div>
+          <Select
+            value={formData.status || 'em_andamento'} // Valor padrão
+            onValueChange={(value) => onInputChange("status", value)}
+          >
+            <SelectTrigger
+              id="status"
+              className={getErrorClass("status")}
+            >
+              <SelectValue placeholder="Selecione o status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  <div className="flex items-center gap-2">
+                    {/* Indicador visual para cada status */}
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        status.value === 'concluido'
+                          ? 'bg-green-500'
+                          : status.value === 'cancelado'
+                          ? 'bg-red-500'
+                          : 'bg-yellow-500'
+                      }`}
+                    />
+                    {status.label}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {renderError("status")}
         </div>
       </CardContent>
     </Card>

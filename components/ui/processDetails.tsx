@@ -16,7 +16,7 @@ interface Processo {
    valor_convenio: number
    valor_recurso_proprio: number
    valor_royalties: number
-   concluido: boolean
+   status: 'em_andamento' | 'concluido' | 'cancelado'
 }
 
 interface ProcessDetailsProps {
@@ -92,10 +92,15 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                      <span className="text-sm font-medium text-gray-600">Status:</span>
                      <br />
                      <Badge
-                        variant={processo.concluido ? "default" : "secondary"}
-                        className={`text-xs ${processo.concluido ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
+                        variant={processo.status ? "default" : "secondary"}
+                        className={`text-xs ${processo.status === 'concluido' ? "bg-green-100 text-green-800" : (processo.status == 'em_andamento' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')}`}
                      >
-                        {processo.concluido ? 'Concluído' : 'Em andamento'}
+                        {processo.status === 'concluido'
+                           ? 'Concluído'
+                           : processo.status === 'em_andamento'
+                              ? 'Em andamento'
+                              : 'Cancelado'
+                        }
                      </Badge>
                   </div>
                </div>
