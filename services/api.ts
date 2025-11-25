@@ -1,10 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-const local = 'http://localhost:3001'
-const dev = 'http://143.198.98.233:3001'
-
 const api = axios.create({
-   baseURL: local,
+   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
 });
 
 let isRefreshing = false;
@@ -80,8 +77,8 @@ api.interceptors.response.use(
             const { data } = await axios.post<{
                accessToken: any;
             }>(
-               'http://localhost:3001/auth/refresh'
-               , { refreshToken }
+               `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/refresh`,
+               { refreshToken }
             );
 
             const newToken = data.accessToken;
