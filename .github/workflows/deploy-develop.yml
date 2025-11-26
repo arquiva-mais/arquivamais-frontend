@@ -61,9 +61,7 @@ jobs:
           ENDSSH
           
           # Criar .env via SSH separadamente
-          ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "cd /opt/staging/arquivamais-frontend && cat > .env << 'ENVEOF'
-$STAGING_ENV
-ENVEOF"
+          ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "echo '$STAGING_ENV' > /opt/staging/arquivamais-frontend/.env"
           
           # Build e subir containers
           ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "cd /opt/staging/arquivamais-frontend && docker compose -f docker-compose.staging.yml up -d --build"
