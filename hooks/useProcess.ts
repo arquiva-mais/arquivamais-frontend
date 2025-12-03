@@ -102,7 +102,6 @@ export const useProcess = () => {
   const fetchAllProcessos = async () => {
     try {
       const response = await api.get('/processos/listar-todos')
-      console.log('response: ', response)
       const data: AllProcessosResponse[] = response.data.processos
 
       const totaisFinanceiros = calcularTotaisFinanceirosProcessos(data)
@@ -114,8 +113,6 @@ export const useProcess = () => {
         cancelados: data.filter(p => p?.status === 'cancelado').length,
         ...totaisFinanceiros
       }
-
-      console.log("status processos: ", processosStats)
 
       setProcessosStats(processosStats)
     } catch {

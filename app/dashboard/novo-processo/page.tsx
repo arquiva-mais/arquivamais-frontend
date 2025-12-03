@@ -153,7 +153,6 @@ function NovoProcessoPageContent() {
   }
 
   const handleConfirmDelete = () => {
-    console.log('Excluindo processo:', editFormData.id)
     deletProcess(Number(editFormData.id))
     showNotification("Processo excluído com sucesso!", 'success')
     setIsDeletedClick(false)

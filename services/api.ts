@@ -82,7 +82,6 @@ api.interceptors.response.use(
             );
 
             const newToken = data.accessToken;
-            console.log(newToken)
             localStorage.setItem('authToken', newToken);
 
             api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
