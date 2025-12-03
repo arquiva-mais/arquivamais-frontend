@@ -7,10 +7,12 @@ interface Processo {
    data_entrada: string
    competencia: string
    objeto: string
-   interessado: string
+   credor: string
+   interessado?: string  // Mantém para compatibilidade
    orgao_gerador: string
    responsavel: string
    setor_atual: string
+   link_processo?: string
    descricao: string
    observacao: string
    valor_convenio: number
@@ -93,15 +95,29 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                <div className="space-y-3 animate-fadeIn animation-delay-100">
                   <h4 className="font-semibold text-gray-800 border-b pb-1">Responsabilidades</h4>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Interessado:</span>
-                     <p className="text-sm max-w-sm truncate" title={processo.interessado}>
-                        {processo.interessado}
+                     <span className="text-sm font-medium text-gray-600">Credor:</span>
+                     <p className="text-sm max-w-sm truncate" title={processo.credor || processo.interessado}>
+                        {processo.credor || processo.interessado}
                      </p>
                   </div>
                   <div>
                      <span className="text-sm font-medium text-gray-600">Responsável:</span>
                      <p className="text-sm">{processo.responsavel}</p>
                   </div>
+                  {processo.link_processo && (
+                     <div>
+                        <span className="text-sm font-medium text-gray-600">Link do Processo:</span>
+                        <a
+                           href={processo.link_processo}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline block truncate max-w-sm"
+                           title={processo.link_processo}
+                        >
+                           Acessar processo
+                        </a>
+                     </div>
+                  )}
                   <div>
                      <span className="text-sm font-medium text-gray-600">Setor Atual:</span>
                      <Badge variant="outline" className="text-xs">{processo.setor_atual}</Badge>

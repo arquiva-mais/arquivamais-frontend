@@ -8,10 +8,11 @@ export interface NovoProcesso {
   data_entrada: string
   competencia: string
   objeto: string
-  interessado: string
+  credor: string
   orgao_gerador: string
   //responsavel: string
   setor_atual: string
+  link_processo: string
   descricao: string
   observacao: string
   valor_convenio: number
@@ -25,10 +26,11 @@ const initialFormData: NovoProcesso = {
   data_entrada: new Date().toISOString().split("T")[0],
   competencia: '',
   objeto: "",
-  interessado: "",
+  credor: "",
   orgao_gerador: "",
   //responsavel: "",
   setor_atual: "",
+  link_processo: "",
   descricao: "",
   observacao: "",
   valor_convenio: 0,
@@ -67,15 +69,15 @@ export const useNewProcess = () => {
     }
     if (!formData.competencia) {
       newErrors.competencia = 'Competência é obrigatória'
-    }
     if (!formData.objeto) {
       newErrors.objeto = 'Objeto é obrigatório'
     }
-    if (!formData.interessado.trim()) {
-      newErrors.interessado = 'Interessado é obrigatório'
+    if (!formData.credor.trim()) {
+      newErrors.credor = 'Credor é obrigatório'
     }
     if (!formData.orgao_gerador.trim()) {
       newErrors.orgao_gerador = 'Órgão Gerador é obrigatório'
+    } newErrors.orgao_gerador = 'Órgão Gerador é obrigatório'
     }
     if (!formData.setor_atual) {
       newErrors.setor_atual = 'Setor Atual é obrigatório'

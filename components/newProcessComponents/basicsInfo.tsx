@@ -1,10 +1,14 @@
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
+import { AutocompleteInput } from "@/components/ui/autocomplete-input"
 import { OBJETOS_PROCESSO, SETORES, MESES } from "@/utils/newProcessConsts"
 import { NovoProcesso } from "@/hooks/useNewProcess"
+import api from "@/services/api"
 
 // Constantes para os status
 const STATUS_OPTIONS = [
@@ -30,6 +34,51 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
   isEditMode = false,
   onStopLoading
 }) => {
+  const [credorSuggestions, setCredorSuggestions] = useState<string[]>([])
+  const [orgaoSuggestions, setOrgaoSuggestions] = useState<string[]>([])
+
+  // Buscar sugestões de credores já cadastrados
+  useEffect(() => {
+    const fetchCredores = async () => {
+      try {
+        const token = localStorage.getItem("authToken")
+        const response = await api.get('/processos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (response.data?.data) {
+          const credores = [...new Set(response.data.data.map((p: any) => p.credor || p.interessado).filter(Boolean))] as string[]
+          setCredorSuggestions(credores)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar credores:', error)
+      }
+    }
+
+    fetchCredores()
+  }, [])
+
+  // Buscar sugestões de órgãos geradores já cadastrados
+  useEffect(() => {
+    const fetchOrgaos = async () => {
+      try {
+        const token = localStorage.getItem("authToken")
+        const response = await api.get('/orgaos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (response.data) {
+          const orgaos = response.data.map((o: any) => o.nome).filter(Boolean)
+          setOrgaoSuggestions(orgaos)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar órgãos:', error)
+      }
+    }
+
+    fetchOrgaos()
+  }, [])
+
   const renderError = (field: string) => {
     if (isEditMode || !errors[field] || isLoading) {
       return null
@@ -104,91 +153,79 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="objeto">Objeto *</Label>
-          <Select
-            value={formData.objeto}
-            onValueChange={(value) => onInputChange("objeto", value)}
-          >
-            <SelectTrigger
-              id="objeto"
-              className={getErrorClass("objeto")}
-            >
-              <SelectValue placeholder="Selecione o objeto" />
-            </SelectTrigger>
-            <SelectContent>
-              {OBJETOS_PROCESSO.map((objeto, index) => (
-                <SelectItem key={index} value={objeto}>
-                  {objeto}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {renderError("objeto")}
-        </div>
-
+        {/* Objeto e Órgão Gerador lado a lado */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="interessado">Interessado *</Label>
-            <Input
-              id="interessado"
-              value={formData.interessado}
-              onChange={(e) => onInputChange("interessado", e.target.value)}
-              placeholder="Ex: Secretaria de Educação"
-              className={getErrorClass("interessado")}
+            <Label htmlFor="objeto">Objeto *</Label>
+            <SearchableSelect
+              id="objeto"
+              options={OBJETOS_PROCESSO}
+              value={formData.objeto}
+              onChange={(value) => onInputChange("objeto", value)}
+              placeholder="Digite para buscar o objeto..."
+              className={getErrorClass("objeto")}
             />
-            {renderError("interessado")}
+            {renderError("objeto")}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="orgao_gerador">Órgão Gerador *</Label>
-            <Input
+            <SearchableSelect
               id="orgao_gerador"
+              options={orgaoSuggestions.length > 0 ? orgaoSuggestions : ["Secretaria de Educação", "Secretaria de Saúde", "Secretaria de Obras"]}
               value={formData.orgao_gerador}
-              onChange={(e) => onInputChange("orgao_gerador", e.target.value)}
-              placeholder="Ex: Secretaria de Educação"
+              onChange={(value) => onInputChange("orgao_gerador", value)}
+              placeholder="Digite para buscar o órgão..."
               className={getErrorClass("orgao_gerador")}
             />
             {renderError("orgao_gerador")}
           </div>
         </div>
 
+        {/* Credor e Setor Atual lado a lado */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/*
           <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável</Label>
-            <Input
-              id="responsavel"
-              value={formData.responsavel}
-              onChange={(e) => onInputChange("responsavel", e.target.value)}
-              placeholder="Nome do responsável"
-              className={getErrorClass("responsavel")}
+            <Label htmlFor="credor">Credor *</Label>
+            <AutocompleteInput
+              id="credor"
+              value={formData.credor}
+              onChange={(value) => onInputChange("credor", value)}
+              suggestions={credorSuggestions}
+              placeholder="Ex: João da Silva"
+              className={getErrorClass("credor")}
             />
-            {renderError("responsavel")}
+            {renderError("credor")}
           </div>
-          */}
+
           <div className="space-y-2">
             <Label htmlFor="setor_atual">Setor Atual *</Label>
-            <Select
+            <SearchableSelect
+              id="setor_atual"
+              options={SETORES}
               value={formData.setor_atual}
-              onValueChange={(value) => onInputChange("setor_atual", value)}
-            >
-              <SelectTrigger
-                id="setor_atual"
-                className={getErrorClass("setor_atual")}
-              >
-                <SelectValue placeholder="Selecione o setor" />
-              </SelectTrigger>
-              <SelectContent>
-                {SETORES.map((setor, index) => (
-                  <SelectItem key={index} value={setor}>
-                    {setor}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(value) => onInputChange("setor_atual", value)}
+              placeholder="Digite para buscar o setor..."
+              className={getErrorClass("setor_atual")}
+            />
             {renderError("setor_atual")}
           </div>
+        </div>
+
+        {/* Campo Link do Processo */}
+        <div className="space-y-2">
+          <Label htmlFor="link_processo">Link do Processo</Label>
+          <Input
+            id="link_processo"
+            type="url"
+            value={formData.link_processo}
+            onChange={(e) => onInputChange("link_processo", e.target.value)}
+            placeholder="https://exemplo.com/processo/12345"
+            className={getErrorClass("link_processo")}
+          />
+          {renderError("link_processo")}
+          <p className="text-xs text-slate-500">
+            Adicione um link para acessar o processo externamente (opcional)
+          </p>
         </div>
 
         <div className="space-y-2">

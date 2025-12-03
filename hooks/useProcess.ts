@@ -8,10 +8,12 @@ interface Processo {
   data_entrada: string
   competencia: string
   objeto: string
-  interessado: string
+  credor: string
+  interessado?: string  // Mantém para compatibilidade
   orgao_gerador: string
   responsavel: string
   setor_atual: string
+  link_processo?: string
   descricao: string
   observacao: string
   valor_convenio: number

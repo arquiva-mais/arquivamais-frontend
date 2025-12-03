@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/ui/header"
-import { StatsCards } from "@/components/ui/statsCards"
+// import { StatsCards } from "@/components/ui/statsCards"
 import { ProcessTable } from "@/components/ui/processTable"
 import { useProcess, type ProcessFilters } from "@/hooks/useProcess"
 
@@ -22,7 +22,7 @@ interface FilterOptions {
   objetos: string[]
   status: string[]
   setores: string[]
-  interessados: string[]
+  credores: string[]
   responsaveis: string[]
 }
 
@@ -30,7 +30,7 @@ interface SelectedFilters {
   objeto: string | null
   status: string | null
   setor: string | null
-  interessado: string | null
+  credor: string | null
   responsavel: string | null
   data_inicio: string | null
   data_fim: string | null
@@ -46,7 +46,7 @@ export default function DashboardPage() {
     objeto: null,
     status: null,
     setor: null,
-    interessado: null,
+    credor: null,
     responsavel: null,
     data_inicio: null,
     data_fim: null,
@@ -56,7 +56,7 @@ export default function DashboardPage() {
     objetos: [],
     status: ["Concluído", "Em andamento", "Cancelado"],
     setores: [],
-    interessados: [],
+    credores: [],
     responsaveis: [],
   })
 
@@ -120,8 +120,8 @@ export default function DashboardPage() {
       backendFilters.setor = newFilters.setor
     }
 
-    if (newFilters.interessado) {
-      backendFilters.busca = newFilters.interessado
+    if (newFilters.credor) {
+      backendFilters.busca = newFilters.credor
     }
 
     if (newFilters.data_inicio) {
@@ -139,14 +139,14 @@ export default function DashboardPage() {
     if (processos.length > 0) {
       const objetos = [...new Set(processos.map(p => p.objeto).filter(Boolean))]
       const setores = [...new Set(processos.map(p => p.setor_atual).filter(Boolean))]
-      const interessados = [...new Set(processos.map(p => p.interessado).filter(Boolean))]
-      const responsaveis = [...new Set(processos.map(p => p.responsavel).filter(Boolean))]
+      const credores = [...new Set(processos.map(p => p.credor || p.interessado).filter(Boolean))] as string[]
+      const responsaveis = [...new Set(processos.map(p => p.responsavel).filter(Boolean))] as string[]
 
       setFilterOptions(prev => ({
         ...prev,
         objetos,
         setores,
-        interessados,
+        credores,
         responsaveis,
       }))
     }
@@ -184,16 +184,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50">
       <DashboardHeader username={userName} onLogout={handleLogout} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <StatsCards
-          totalProcessos={processosStats.total}
-          processosConcluidos={processosStats.concluidos}
-          processosEmAndamento={processosStats.emAndamento}
-          processosCancelados={processosStats.cancelados}
-          totalValorConvenio={processosStats.totalValorConvenio}
-          totalValorRecursoProprio={processosStats.totalValorRecursoProprio}
-          totalValorRoyalties={processosStats.totalValorRoyalties}
-        />
+      <main className="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <ProcessTable
           processos={processos}
@@ -209,7 +200,7 @@ export default function DashboardPage() {
             objetos: filterOptions.objetos,
             status: filterOptions.status,
             setores: filterOptions.setores,
-            interessados: filterOptions.interessados,
+            credores: filterOptions.credores,
             responsaveis: filterOptions.responsaveis,
           }}
           selectedFilters={selectedFilters}
