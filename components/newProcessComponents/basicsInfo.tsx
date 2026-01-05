@@ -73,52 +73,57 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
         <CardTitle>Informações Básicas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numero_processo">Número do Processo *</Label>
             <Input
               id="numero_processo"
               value={formData.numero_processo}
               onChange={(e) => onInputChange("numero_processo", e.target.value)}
-              placeholder="2025/007891"
+              placeholder="2025.12345678912.PG.PMP"
               className={`bg-slate-50 ${getErrorClass("numero_processo")}`}
             />
             {renderError("numero_processo")}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="data_entrada">Data de Entrada *</Label>
-            <Input
-              id="data_entrada"
-              type="date"
-              value={formData.data_entrada}
-              onChange={(e) => onInputChange("data_entrada", e.target.value)}
-              className={getErrorClass("data_entrada")}
-            />
-            {renderError("data_entrada")}
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="data_entrada">Data de Entrada *</Label>
+              <Input
+                id="data_entrada"
+                type="date"
+                value={formData.data_entrada}
+                onChange={(e) => onInputChange("data_entrada", e.target.value)}
+                className={getErrorClass("data_entrada")}
+              />
+              {renderError("data_entrada")}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="competencia">Competência *</Label>
-            <Select
-              value={formData.competencia}
-              onValueChange={(value) => onInputChange("competencia", value)}
-            >
-              <SelectTrigger
-                id="competencia"
-                className={getErrorClass("competencia")}
+            <div className="space-y-2">
+              <Label htmlFor="competencia">Competência</Label>
+              <Select
+                value={formData.competencia}
+                onValueChange={(value) => onInputChange("competencia", value === "clear" ? "" : value)}
               >
-                <SelectValue placeholder="Selecione a competência" />
-              </SelectTrigger>
-              <SelectContent>
-                {MESES.map((mes) => (
-                  <SelectItem key={mes} value={mes}>
-                    {mes}
+                <SelectTrigger
+                  id="competencia"
+                  className={getErrorClass("competencia")}
+                >
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clear" className="text-slate-500 italic">
+                    Limpar seleção
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {renderError("competencia")}
+                  {MESES.map((mes) => (
+                    <SelectItem key={mes} value={mes}>
+                      {mes}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {renderError("competencia")}
+            </div>
           </div>
         </div>
 
@@ -183,7 +188,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="link_processo">Link do Processo</Label>
+          <Label htmlFor="link_processo">Link do Processo *</Label>
           <Input
             id="link_processo"
             type="url"
@@ -194,7 +199,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           />
           {renderError("link_processo")}
           <p className="text-xs text-slate-500">
-            Adicione um link para acessar o processo externamente (opcional)
+            Adicione um link para acessar o processo externamente
           </p>
         </div>
 

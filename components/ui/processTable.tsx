@@ -62,10 +62,10 @@ interface Processo {
   valor_recurso_proprio: number;
   valor_royalties: number;
   status: "em_andamento" | "concluido" | "cancelado";
-  usuario_criacao?: string;
-  usuario_ultima_alteracao?: string;
-  data_criacao?: string;
-  data_ultima_alteracao?: string;
+  update_for?: string;
+  createdAt?: string;
+  data_atualizacao?: string;
+  dias_no_setor?: number;
 }
 
 interface FilterOptions {
@@ -718,7 +718,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="objeto"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-40 min-w-40"
+                    className="w-40 min-w-40 max-w-[160px]"
                   >
                     Objeto
                   </SortableHeader>
@@ -727,7 +727,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="credor"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-48 min-w-48"
+                    className="w-48 min-w-48 max-w-[200px]"
                   >
                     Credor
                   </SortableHeader>
@@ -736,7 +736,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="orgao_gerador"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-36 min-w-36"
+                    className="w-36 min-w-36 max-w-[150px]"
                   >
                     Órgão Gerador
                   </SortableHeader>
@@ -745,9 +745,18 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="setor_atual"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-36 min-w-36"
+                    className="w-36 min-w-36 max-w-[180px]"
                   >
                     Setor Atual
+                  </SortableHeader>
+
+                  <SortableHeader
+                    field="dias_no_setor"
+                    sortConfig={sortConfig}
+                    onSort={onSort}
+                    className="w-24 min-w-24 text-center"
+                  >
+                    Tempo no Setor
                   </SortableHeader>
 
                   <SortableHeader
@@ -832,26 +841,26 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         )}
                       </TableCell>
                       <TableCell
-                        className="w-40 min-w-40 truncate"
+                        className="w-40 min-w-40 max-w-[160px] truncate"
                         title={processo.objeto}
                       >
                         {processo.objeto}
                       </TableCell>
                       <TableCell
-                        className="w-48 min-w-48 truncate overflow-hidden"
+                        className="w-48 min-w-48 max-w-[200px] truncate overflow-hidden"
                         title={processo.credor || processo.interessado}
                       >
                         {processo.credor || processo.interessado}
                       </TableCell>
                       <TableCell
-                        className="w-36 min-w-36 truncate"
+                        className="w-36 min-w-36 max-w-[150px] truncate"
                         title={processo.orgao_gerador}
                       >
                         {processo.orgao_gerador}
                       </TableCell>
-                      <TableCell className="w-36 min-w-36">
+                      <TableCell className="w-36 min-w-36 max-w-[180px]">
                         {editingSectorId === processo.id ? (
-                          <div className="w-full min-w-[200px]">
+                          <div className="w-full min-w-[180px]">
                             <SearchableSelect
                               options={availableSectors}
                               value={processo.setor_atual}
@@ -864,20 +873,25 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         ) : (
                           <Button
                             variant="ghost"
-                            className="h-auto p-0 hover:bg-transparent w-full justify-start"
+                            className="h-auto p-0 hover:bg-transparent w-full justify-start truncate"
                             onClick={() => setEditingSectorId(processo.id!)}
                           >
                             <Badge
                               variant="outline"
-                              className="cursor-pointer hover:bg-slate-100 flex items-center gap-1"
+                              className="cursor-pointer hover:bg-slate-100 flex items-center gap-1 truncate max-w-full"
                             >
-                              {processo.setor_atual}{" "}
-                              <ChevronDown className="h-3 w-3 opacity-50" />
+                              <span className="truncate">{processo.setor_atual}</span>
+                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
                             </Badge>
                           </Button>
                         )}
                       </TableCell>
-                      <TableCell className="font-medium w-24 min-w-24">
+                      <TableCell className="w-24 min-w-24 text-center">
+                        <Badge variant="secondary" className="font-normal">
+                          {processo.dias_no_setor !== null && processo.dias_no_setor !== undefined ? `${processo.dias_no_setor}d` : '-'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium w-24 min-w-24 text-right">
                         {formatCurrency(getTotalValue(processo))}
                       </TableCell>
                       <TableCell className="w-24 min-w-24">

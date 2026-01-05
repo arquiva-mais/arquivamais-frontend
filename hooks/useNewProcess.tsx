@@ -67,8 +67,10 @@ export const useNewProcess = () => {
     if (!formData.data_entrada) {
       newErrors.data_entrada = 'Data de entrada é obrigatória'
     }
-    if (!formData.competencia) {
-      newErrors.competencia = 'Competência é obrigatória'
+    // Competência agora é opcional
+    // if (!formData.competencia) {
+    //   newErrors.competencia = 'Competência é obrigatória'
+    // }
     if (!formData.objeto) {
       newErrors.objeto = 'Objeto é obrigatório'
     }
@@ -77,10 +79,12 @@ export const useNewProcess = () => {
     }
     if (!formData.orgao_gerador.trim()) {
       newErrors.orgao_gerador = 'Órgão Gerador é obrigatório'
-    } newErrors.orgao_gerador = 'Órgão Gerador é obrigatório'
     }
     if (!formData.setor_atual) {
       newErrors.setor_atual = 'Setor Atual é obrigatório'
+    }
+    if (!formData.link_processo || !formData.link_processo.trim()) {
+      newErrors.link_processo = 'Link do Processo é obrigatório'
     }
 
     setErrors(newErrors)

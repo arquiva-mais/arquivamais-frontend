@@ -23,6 +23,7 @@ interface Processo {
    update_for?: string
    createdAt?: string
    data_atualizacao?: string
+   dias_no_setor?: number
 }
 
 interface ProcessDetailsProps {
@@ -95,6 +96,17 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                <div className="space-y-3 animate-fadeIn animation-delay-100">
                   <h4 className="font-semibold text-gray-800 border-b pb-1">Responsabilidades</h4>
                   <div>
+                     <span className="text-sm font-medium text-gray-600">Setor Atual:</span>
+                     <div className="flex items-center gap-2">
+                        <p className="text-sm">{processo.setor_atual}</p>
+                        {processo.dias_no_setor !== undefined && processo.status !== 'concluido' && processo.status !== 'cancelado' && (
+                           <Badge variant={processo.dias_no_setor > 15 ? "destructive" : "secondary"} className="text-xs">
+                              {processo.dias_no_setor} dias no setor
+                           </Badge>
+                        )}
+                     </div>
+                  </div>
+                  <div>
                      <span className="text-sm font-medium text-gray-600">Credor:</span>
                      <p className="text-sm max-w-sm truncate" title={processo.credor || processo.interessado}>
                         {processo.credor || processo.interessado}
@@ -118,10 +130,6 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                         </a>
                      </div>
                   )}
-                  <div>
-                     <span className="text-sm font-medium text-gray-600">Setor Atual:</span>
-                     <Badge variant="outline" className="text-xs">{processo.setor_atual}</Badge>
-                  </div>
                   <div>
                      <span className="text-sm font-medium text-gray-600">Status:</span>
                      <br />

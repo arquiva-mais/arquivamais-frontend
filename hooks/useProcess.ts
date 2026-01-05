@@ -20,10 +20,9 @@ interface Processo {
   valor_recurso_proprio: number
   valor_royalties: number
   status: 'em_andamento' | 'concluido' | 'cancelado'
-  usuario_criacao?: string
-  usuario_ultima_alteracao?: string
-  data_criacao?: string
-  data_ultima_alteracao?: string
+  update_for?: string
+  createdAt?: string
+  data_atualizacao?: string
 }
 
 interface PaginationInfo {
