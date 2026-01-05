@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SearchableSelect } from "@/components/ui/searchable-select"
-import { AutocompleteInput } from "@/components/ui/autocomplete-input"
-import { OBJETOS_PROCESSO, SETORES, MESES } from "@/utils/newProcessConsts"
+import { AsyncCreatableSelect } from "@/components/ui/async-creatable-select"
+import { ManageDomainModal } from "@/components/ui/manage-domain-modal"
+import { MESES } from "@/utils/newProcessConsts"
 import { NovoProcesso } from "@/hooks/useNewProcess"
-import api from "@/services/api"
+import { useDomainManager } from "@/hooks/useDomainManager"
+import { AlertCircle } from "lucide-react"
 
-// Constantes para os status
 const STATUS_OPTIONS = [
-  { value: 'em_andamento', label: 'Em andamento' },
-  { value: 'concluido', label: 'Concluído' },
-  { value: 'cancelado', label: 'Cancelado' }
+  { value: 'em_andamento', label: 'Em andamento', color: 'bg-yellow-500' },
+  { value: 'concluido', label: 'Concluído', color: 'bg-green-500' },
+  { value: 'cancelado', label: 'Cancelado', color: 'bg-red-500' }
 ]
 
 interface InformacoesBasicasProps {
@@ -34,66 +34,35 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
   isEditMode = false,
   onStopLoading
 }) => {
-  const [credorSuggestions, setCredorSuggestions] = useState<string[]>([])
-  const [orgaoSuggestions, setOrgaoSuggestions] = useState<string[]>([])
+  const { 
+    domains, 
+    modals, 
+    toggleModal, 
+    loadDomain, 
+    createItem, 
+    updateItem, 
+    deleteItem 
+  } = useDomainManager()
 
-  // Buscar sugestões de credores já cadastrados
   useEffect(() => {
-    const fetchCredores = async () => {
-      try {
-        const token = localStorage.getItem("authToken")
-        const response = await api.get('/processos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (response.data?.data) {
-          const credores = [...new Set(response.data.data.map((p: any) => p.credor || p.interessado).filter(Boolean))] as string[]
-          setCredorSuggestions(credores)
-        }
-      } catch (error) {
-        console.error('Erro ao buscar credores:', error)
-      }
-    }
-
-    fetchCredores()
-  }, [])
-
-  // Buscar sugestões de órgãos geradores já cadastrados
-  useEffect(() => {
-    const fetchOrgaos = async () => {
-      try {
-        const token = localStorage.getItem("authToken")
-        const response = await api.get('/orgaos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        if (response.data) {
-          const orgaos = response.data.map((o: any) => o.nome).filter(Boolean)
-          setOrgaoSuggestions(orgaos)
-        }
-      } catch (error) {
-        console.error('Erro ao buscar órgãos:', error)
-      }
-    }
-
-    fetchOrgaos()
-  }, [])
+    loadDomain('objeto')
+    loadDomain('credor')
+    loadDomain('orgao')
+    loadDomain('setor')
+  }, [loadDomain])
 
   const renderError = (field: string) => {
-    if (isEditMode || !errors[field] || isLoading) {
-      return null
-    } else {
-      onStopLoading()
-      return (
-        <p className="text-sm text-red-500 flex items-center gap-1">
-          <span className="text-red-500">⚠</span>
-          {errors[field]}
-        </p>
-      )
-    }
+    if (isEditMode || !errors[field] || isLoading) return null
+    
+    onStopLoading()
+    return (
+      <p className="text-sm text-red-500 flex items-center gap-1">
+        <AlertCircle className="w-4 h-4" />
+        {errors[field]}
+      </p>
+    )
   }
 
-  // Função para aplicar classes de erro condicionalmente
   const getErrorClass = (field: string) => {
     return !isEditMode && errors[field] ? 'border-red-500 focus:border-red-500' : ''
   }
@@ -153,65 +122,66 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           </div>
         </div>
 
-        {/* Objeto e Órgão Gerador lado a lado */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="objeto">Objeto *</Label>
-            <SearchableSelect
-              id="objeto"
-              options={OBJETOS_PROCESSO}
+            <AsyncCreatableSelect
+              label="Objeto *"
               value={formData.objeto}
               onChange={(value) => onInputChange("objeto", value)}
-              placeholder="Digite para buscar o objeto..."
-              className={getErrorClass("objeto")}
+              placeholder="Selecione ou crie um objeto"
+              searchPlaceholder="Buscar objeto..."
+              loadOptions={(search) => loadDomain('objeto', search)}
+              onCreate={(nome) => createItem('objeto', nome)}
+              onManage={() => toggleModal('objeto', true)}
+              error={!isEditMode && errors.objeto ? errors.objeto : undefined}
             />
-            {renderError("objeto")}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="orgao_gerador">Órgão Gerador *</Label>
-            <SearchableSelect
-              id="orgao_gerador"
-              options={orgaoSuggestions.length > 0 ? orgaoSuggestions : ["Secretaria de Educação", "Secretaria de Saúde", "Secretaria de Obras"]}
+            <AsyncCreatableSelect
+              label="Órgão Gerador *"
               value={formData.orgao_gerador}
               onChange={(value) => onInputChange("orgao_gerador", value)}
-              placeholder="Digite para buscar o órgão..."
-              className={getErrorClass("orgao_gerador")}
+              placeholder="Selecione ou crie um órgão"
+              searchPlaceholder="Buscar órgão..."
+              loadOptions={(search) => loadDomain('orgao', search)}
+              onCreate={(nome) => createItem('orgao', nome)}
+              onManage={() => toggleModal('orgao', true)}
+              error={!isEditMode && errors.orgao_gerador ? errors.orgao_gerador : undefined}
             />
-            {renderError("orgao_gerador")}
           </div>
         </div>
 
-        {/* Credor e Setor Atual lado a lado */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="credor">Credor *</Label>
-            <AutocompleteInput
-              id="credor"
+            <AsyncCreatableSelect
+              label="Credor *"
               value={formData.credor}
               onChange={(value) => onInputChange("credor", value)}
-              suggestions={credorSuggestions}
-              placeholder="Ex: João da Silva"
-              className={getErrorClass("credor")}
+              placeholder="Selecione ou crie um credor"
+              searchPlaceholder="Buscar credor..."
+              loadOptions={(search) => loadDomain('credor', search)}
+              onCreate={(nome) => createItem('credor', nome)}
+              onManage={() => toggleModal('credor', true)}
+              error={!isEditMode && errors.credor ? errors.credor : undefined}
             />
-            {renderError("credor")}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="setor_atual">Setor Atual *</Label>
-            <SearchableSelect
-              id="setor_atual"
-              options={SETORES}
+            <AsyncCreatableSelect
+              label="Setor Atual *"
               value={formData.setor_atual}
               onChange={(value) => onInputChange("setor_atual", value)}
-              placeholder="Digite para buscar o setor..."
-              className={getErrorClass("setor_atual")}
+              placeholder="Selecione ou crie um setor"
+              searchPlaceholder="Buscar setor..."
+              loadOptions={(search) => loadDomain('setor', search)}
+              onCreate={(nome) => createItem('setor', nome)}
+              onManage={() => toggleModal('setor', true)}
+              error={!isEditMode && errors.setor_atual ? errors.setor_atual : undefined}
             />
-            {renderError("setor_atual")}
           </div>
         </div>
 
-        {/* Campo Link do Processo */}
         <div className="space-y-2">
           <Label htmlFor="link_processo">Link do Processo</Label>
           <Input
@@ -250,13 +220,12 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           />
         </div>
 
-        {/* Substituir checkbox por dropdown */}
         <div className="space-y-2">
           <Label htmlFor="status" className="text-sm font-medium">
             Status do Processo *
           </Label>
           <Select
-            value={formData.status || 'em_andamento'} // Valor padrão
+            value={formData.status || 'em_andamento'}
             onValueChange={(value) => onInputChange("status", value)}
           >
             <SelectTrigger
@@ -269,16 +238,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               {STATUS_OPTIONS.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   <div className="flex items-center gap-2">
-                    {/* Indicador visual para cada status */}
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        status.value === 'concluido'
-                          ? 'bg-green-500'
-                          : status.value === 'cancelado'
-                          ? 'bg-red-500'
-                          : 'bg-yellow-500'
-                      }`}
-                    />
+                    <div className={`w-2 h-2 rounded-full ${status.color}`} />
                     {status.label}
                   </div>
                 </SelectItem>
@@ -287,6 +247,50 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
           </Select>
           {renderError("status")}
         </div>
+
+        <ManageDomainModal
+          open={modals.objeto}
+          onOpenChange={(open) => toggleModal('objeto', open)}
+          title="Gerenciar Objetos"
+          description="Renomeie ou exclua objetos cadastrados"
+          items={domains.objeto.items}
+          onUpdate={(id, nome) => updateItem('objeto', id, nome)}
+          onDelete={(id) => deleteItem('objeto', id)}
+          onRefresh={async () => { await loadDomain('objeto') }}
+        />
+
+        <ManageDomainModal
+          open={modals.credor}
+          onOpenChange={(open) => toggleModal('credor', open)}
+          title="Gerenciar Credores"
+          description="Renomeie ou exclua credores cadastrados"
+          items={domains.credor.items}
+          onUpdate={(id, nome) => updateItem('credor', id, nome)}
+          onDelete={(id) => deleteItem('credor', id)}
+          onRefresh={async () => { await loadDomain('credor') }}
+        />
+
+        <ManageDomainModal
+          open={modals.orgao}
+          onOpenChange={(open) => toggleModal('orgao', open)}
+          title="Gerenciar Órgãos Geradores"
+          description="Renomeie ou exclua órgãos geradores cadastrados"
+          items={domains.orgao.items}
+          onUpdate={(id, nome) => updateItem('orgao', id, nome)}
+          onDelete={(id) => deleteItem('orgao', id)}
+          onRefresh={async () => { await loadDomain('orgao') }}
+        />
+
+        <ManageDomainModal
+          open={modals.setor}
+          onOpenChange={(open) => toggleModal('setor', open)}
+          title="Gerenciar Setores"
+          description="Renomeie ou exclua setores cadastrados"
+          items={domains.setor.items}
+          onUpdate={(id, nome) => updateItem('setor', id, nome)}
+          onDelete={(id) => deleteItem('setor', id)}
+          onRefresh={async () => { await loadDomain('setor') }}
+        />
       </CardContent>
     </Card>
   )

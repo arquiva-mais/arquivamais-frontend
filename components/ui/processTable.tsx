@@ -40,8 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ProcessDetails } from "./processDetails"
 import { SearchableSelect } from "@/components/ui/searchable-select"
-import { SETORES } from "@/utils/newProcessConsts"
-import api from "@/services/api"
+import api, { setoresApi } from "@/services/api"
 import { useToast } from "@/components/providers/toastProvider"
 import { AlertTriangle } from "lucide-react"
 
@@ -168,9 +167,24 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const [inputValue, setInputValue] = useState(searchTerm);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [availableSectors, setAvailableSectors] = useState<string[]>([]);
 
   const router = useRouter();
   const { showNotification } = useToast();
+
+  useEffect(() => {
+    const loadSectors = async () => {
+      try {
+        const data = await setoresApi.listar();
+        if (Array.isArray(data)) {
+          setAvailableSectors(data.map((s: any) => s.nome));
+        }
+      } catch (error) {
+        console.error("Erro ao carregar setores:", error);
+      }
+    };
+    loadSectors();
+  }, []);
 
   // Estados para edição de setor
   const [sectorToUpdate, setSectorToUpdate] = useState<{
@@ -839,7 +853,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         {editingSectorId === processo.id ? (
                           <div className="w-full min-w-[200px]">
                             <SearchableSelect
-                              options={SETORES}
+                              options={availableSectors}
                               value={processo.setor_atual}
                               onChange={(newValue) => handleSectorClick(processo, newValue)}
                               placeholder="Selecione ou crie..."
