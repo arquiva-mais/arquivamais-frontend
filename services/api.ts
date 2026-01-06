@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'ax
 
 const api = axios.create({
    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+   withCredentials: true 
 });
 
 let isRefreshing = false;
@@ -41,22 +42,27 @@ api.interceptors.response.use(
    async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+      // Ignora 401 em rotas de auth para evitar loops
+      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+         return Promise.reject(error);
+      }
 
       if (
          error.response?.status === 401 &&
-         originalRequest && !originalRequest._retry
+         originalRequest && 
+         !originalRequest._retry
       ) {
          if (isRefreshing) {
             return new Promise((resolve, reject) => {
                failedQueue.push({ resolve, reject });
             })
-               .then(token => {
+               .then((token) => {
                   if (originalRequest.headers) {
                      originalRequest.headers.Authorization = `Bearer ${token}`;
                   }
                   return api(originalRequest);
                })
-               .catch(err => {
+               .catch((err) => {
                   return Promise.reject(err);
                });
          }
@@ -65,55 +71,40 @@ api.interceptors.response.use(
          isRefreshing = true;
 
          try {
-            if (typeof window === 'undefined') {
-               return Promise.reject(error);
+            // Chama endpoint de refresh (cookie enviado automaticamente via withCredentials)
+            const { data } = await api.post('/auth/refresh');
+            const { accessToken } = data;
+
+            if (accessToken) {
+               localStorage.setItem('authToken', accessToken);
+               
+               if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+               }
+               
+               processQueue(null, accessToken);
+               return api(originalRequest);
             }
-
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (!refreshToken) {
-               throw new Error('Refresh token não encontrado');
-            }
-
-            const { data } = await axios.post<{
-               accessToken: any;
-            }>(
-               `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/refresh`,
-               { refreshToken }
-            );
-
-            const newToken = data.accessToken;
-            localStorage.setItem('authToken', newToken);
-
-            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-
-            if (originalRequest.headers) {
-               originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            }
-
-            processQueue(null, newToken);
-            return api(originalRequest);
-
-         } catch (refreshError: any) {
-            processQueue(refreshError, null);
-            console.error('Falha ao atualizar o token:', refreshError);
-
+         } catch (refreshError) {
+            processQueue(refreshError as Error, null);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
             if (typeof window !== 'undefined') {
-               localStorage.removeItem('authToken');
-               localStorage.removeItem('isAuthenticated');
-               localStorage.removeItem('userEmail');
-               localStorage.removeItem('userName');
-               localStorage.removeItem('role');
-               localStorage.removeItem('refreshToken')
-               window.location.href = '/auth/login';
+                window.location.href = '/auth/login';
             }
             return Promise.reject(refreshError);
          } finally {
             isRefreshing = false;
          }
       }
+
       return Promise.reject(error);
    }
 );
+
+// Remove duplicated default export and duplicated setoresApi definition already present at bottom
+// We only need the interceptor logic and the exports from bottom
+
 
 // API de Objetos
 export const objetosApi = {

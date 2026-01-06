@@ -633,7 +633,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {userRole === "admin" && (
+              {['admin', 'user'].includes(userRole) && (
                 <Button
                   onClick={handleLoadingPage}
                   className="w-full sm:w-auto cursor-pointer"
@@ -776,7 +776,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   >
                     Status
                   </SortableHeader>
-                  {userRole === "admin" && (
+                  {['admin', 'user'].includes(userRole) && (
                     <TableHead className="w-16">Ação</TableHead>
                   )}
                 </TableRow>
@@ -785,7 +785,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
-                      {Array.from({ length: userRole === "admin" ? 9 : 8 }).map(
+                      {Array.from({ length: ['admin', 'user'].includes(userRole) ? 9 : 8 }).map(
                         (_, cellIndex) => (
                           <TableCell key={cellIndex}>
                             <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -797,7 +797,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 ) : processos.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={userRole === "admin" ? 9 : 8}
+                      colSpan={['admin', 'user'].includes(userRole) ? 9 : 8}
                       className="text-center py-8 text-slate-500"
                     >
                       {searchTerm || hasActiveFilters
@@ -907,7 +907,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           );
                         })()}
                       </TableCell>
-                      {userRole === "admin" && (
+                      {['admin', 'user'].includes(userRole) && (
                         <TableCell className="w-16">
                           <Button
                             variant="ghost"
@@ -922,7 +922,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     </TableRow>,
                     <TableRow key={`details-${processo.id || index}`}>
                       <TableCell
-                        colSpan={userRole === "admin" ? 10 : 9}
+                        colSpan={['admin', 'user'].includes(userRole) ? 10 : 9}
                         className="p-0"
                       >
                         <ProcessDetails
