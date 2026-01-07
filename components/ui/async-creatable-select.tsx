@@ -55,11 +55,16 @@ export function AsyncCreatableSelect({
   const [loading, setLoading] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const [creating, setCreating] = React.useState(false)
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Carregar opções iniciais
   React.useEffect(() => {
     if (open) {
       handleSearch("")
+    }
+    // Cleanup timeout on unmount or when open changes
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [open])
 
@@ -94,7 +99,14 @@ export function AsyncCreatableSelect({
 
   const handleSearchChange = (searchValue: string) => {
     setSearch(searchValue)
-    handleSearch(searchValue)
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      handleSearch(searchValue)
+    }, 500)
   }
 
   const selectedOption = options.find(opt => opt.nome === value)
