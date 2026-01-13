@@ -118,31 +118,56 @@ const SortableHeader = ({
   sortConfig,
   onSort,
   className = "",
+  align = "left",
 }: {
   children: React.ReactNode;
   field: string;
   sortConfig?: { field: string; direction: "asc" | "desc" };
   onSort?: (field: string) => void;
   className?: string;
+  align?: "left" | "center" | "right";
 }) => {
   const isActive = sortConfig?.field === field;
   const direction = sortConfig?.direction;
+
+  const justifyClass = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  }[align];
 
   return (
     <TableHead
       className={`cursor-pointer hover:bg-slate-100 transition-colors select-none ${className}`}
       onClick={() => onSort?.(field)}
     >
-      <div className="flex items-center gap-2">
+      <div className={`flex items-center gap-2 ${justifyClass}`}>
+        {align === "right" && (
+          <div className="flex items-center">
+            {isActive ? (
+              direction === "asc" ? (
+                <ChevronUp className="w-4 h-4 ml-1" />
+              ) : (
+                <ChevronDown className="w-4 h-4 ml-1" />
+              )
+            ) : (
+              <ChevronsUpDown className="w-4 h-4 opacity-50 ml-1" />
+            )}
+          </div>
+        )}
         {children}
-        {isActive ? (
-          direction === "asc" ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )
-        ) : (
-          <ChevronsUpDown className="w-4 h-4 opacity-50" />
+        {align !== "right" && (
+          <>
+            {isActive ? (
+              direction === "asc" ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )
+            ) : (
+              <ChevronsUpDown className="w-4 h-4 opacity-50" />
+            )}
+          </>
         )}
       </div>
     </TableHead>
@@ -699,7 +724,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="w-full">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -709,7 +734,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="numero_processo"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-32 min-w-32"
+                    className="w-28 min-w-28"
                   >
                     Número
                   </SortableHeader>
@@ -718,7 +743,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="objeto"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-40 min-w-40 max-w-[160px]"
+                    className="w-32 min-w-32 max-w-[140px]"
                   >
                     Objeto
                   </SortableHeader>
@@ -727,7 +752,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="credor"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-48 min-w-48 max-w-[200px]"
+                    className="w-36 min-w-36 max-w-[160px]"
                   >
                     Credor
                   </SortableHeader>
@@ -736,7 +761,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="orgao_gerador"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-36 min-w-36 max-w-[150px]"
+                    className="w-20 min-w-20 max-w-[100px]"
                   >
                     Órgão Gerador
                   </SortableHeader>
@@ -745,7 +770,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="setor_atual"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-36 min-w-36 max-w-[180px]"
+                    className="w-32 min-w-32 max-w-[140px]"
                   >
                     Setor Atual
                   </SortableHeader>
@@ -754,31 +779,23 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     field="dias_no_setor"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-24 min-w-24 text-center"
+                    className="w-20 min-w-20"
+                    align="center"
                   >
-                    Tempo no Setor
+                    Tempo
                   </SortableHeader>
 
                   <SortableHeader
                     field="valor_total"
                     sortConfig={sortConfig}
                     onSort={onSort}
-                    className="w-24 min-w-24 text-right"
+                    className="w-28 min-w-28"
+                    align="right"
                   >
                     Valor Total
                   </SortableHeader>
 
-                  <SortableHeader
-                    field="status"
-                    sortConfig={sortConfig}
-                    onSort={onSort}
-                    className="w-24 min-w-24"
-                  >
-                    Status
-                  </SortableHeader>
-                  {['admin', 'user'].includes(userRole) && (
-                    <TableHead className="w-16">Ação</TableHead>
-                  )}
+                  <TableHead className="w-16 text-center"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -825,7 +842,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           />
                         </Button>
                       </TableCell>
-                      <TableCell className="font-medium w-32 min-w-32">
+                      <TableCell className="font-medium w-28 min-w-28 truncate" title={processo.numero_processo}>
                         {processo.link_processo ? (
                           <a
                             href={processo.link_processo}
@@ -841,26 +858,26 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         )}
                       </TableCell>
                       <TableCell
-                        className="w-40 min-w-40 max-w-[160px] truncate"
+                        className="w-32 min-w-32 max-w-[140px] truncate"
                         title={processo.objeto}
                       >
                         {processo.objeto}
                       </TableCell>
                       <TableCell
-                        className="w-48 min-w-48 max-w-[200px] truncate overflow-hidden"
+                        className="w-36 min-w-36 max-w-[160px] truncate overflow-hidden"
                         title={processo.credor || processo.interessado}
                       >
                         {processo.credor || processo.interessado}
                       </TableCell>
                       <TableCell
-                        className="w-36 min-w-36 max-w-[150px] truncate"
+                        className="w-20 min-w-20 max-w-[100px] truncate"
                         title={processo.orgao_gerador}
                       >
                         {processo.orgao_gerador}
                       </TableCell>
-                      <TableCell className="w-36 min-w-36 max-w-[180px]">
+                      <TableCell className="w-32 min-w-32 max-w-[140px]" title={processo.setor_atual}>
                         {editingSectorId === processo.id ? (
-                          <div className="w-full min-w-[180px]">
+                          <div className="w-full min-w-[140px]">
                             <SearchableSelect
                               options={availableSectors}
                               value={processo.setor_atual}
@@ -886,39 +903,47 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           </Button>
                         )}
                       </TableCell>
-                      <TableCell className="w-24 min-w-24 text-center">
+                      <TableCell className="w-20 min-w-20 text-center">
                         <Badge variant="secondary" className="font-normal">
                           {processo.dias_no_setor !== null && processo.dias_no_setor !== undefined ? `${processo.dias_no_setor}d` : '-'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium w-24 min-w-24 text-right">
+                      <TableCell className="font-medium w-28 min-w-28 text-right truncate" title={formatCurrency(getTotalValue(processo))}>
                         {formatCurrency(getTotalValue(processo))}
                       </TableCell>
-                      <TableCell className="w-24 min-w-24">
-                        {(() => {
-                          const statusConfig = getStatusConfig(processo.status);
-                          return (
-                            <Badge
-                              variant={statusConfig.variant}
-                              className={statusConfig.className}
+                      <TableCell className="w-16 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {(() => {
+                            const statusColors: Record<string, string> = {
+                              em_andamento: "bg-yellow-500",
+                              concluido: "bg-green-500",
+                              cancelado: "bg-red-500"
+                            };
+                            const statusLabels: Record<string, string> = {
+                              em_andamento: "Em andamento",
+                              concluido: "Concluído",
+                              cancelado: "Cancelado"
+                            };
+                            return (
+                              <div
+                                className={`w-3 h-3 rounded-full ${statusColors[processo.status] || "bg-gray-400"}`}
+                                title={statusLabels[processo.status] || processo.status}
+                              />
+                            );
+                          })()}
+                          {['admin', 'user'].includes(userRole) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditProcess(processo)}
+                              className="h-6 w-6 p-0 hover:bg-slate-200 transition-colors duration-200"
+                              title="Editar"
                             >
-                              {statusConfig.label}
-                            </Badge>
-                          );
-                        })()}
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
-                      {['admin', 'user'].includes(userRole) && (
-                        <TableCell className="w-16">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditProcess(processo)}
-                            className="h-8 w-8 p-0 hover:bg-slate-200 transition-colors duration-200"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      )}
                     </TableRow>,
                     <TableRow key={`details-${processo.id || index}`}>
                       <TableCell
