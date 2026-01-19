@@ -19,7 +19,7 @@ interface Processo {
   valor_convenio: number
   valor_recurso_proprio: number
   valor_royalties: number
-  status: 'em_andamento' | 'concluido' | 'cancelado'
+  status: 'em_andamento' | 'concluido'
   update_for?: string
   createdAt?: string
   data_atualizacao?: string
@@ -78,7 +78,6 @@ export const useProcess = () => {
     total: 0,
     concluidos: 0,
     emAndamento: 0,
-    cancelados: 0,
     totalValorConvenio: 0,
     totalValorRecursoProprio: 0,
     totalValorRoyalties: 0
@@ -109,7 +108,6 @@ export const useProcess = () => {
         total: data.length,
         concluidos: data.filter(p => p?.status === 'concluido').length,
         emAndamento: data.filter(p => p?.status === 'em_andamento').length,
-        cancelados: data.filter(p => p?.status === 'cancelado').length,
         ...totaisFinanceiros
       }
 
@@ -222,7 +220,6 @@ export const useProcess = () => {
         total: 0,
         concluidos: 0,
         emAndamento: 0,
-        cancelados: 0,
         totalValorConvenio: 0,
         totalValorRecursoProprio: 0,
         totalValorRoyalties: 0
@@ -266,7 +263,7 @@ export const useProcess = () => {
   }
 
   useEffect(() => {
-    fetchProcessos(),
+    // fetchProcessos() // Removido para controle via componente pai
     fetchAllProcessos()
   }, [])
 

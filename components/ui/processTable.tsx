@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -61,7 +63,7 @@ interface Processo {
   valor_convenio: number;
   valor_recurso_proprio: number;
   valor_royalties: number;
-  status: "em_andamento" | "concluido" | "cancelado";
+  status: "em_andamento" | "concluido";
   update_for?: string;
   createdAt?: string;
   data_atualizacao?: string;
@@ -110,6 +112,8 @@ interface ProcessosTableProps {
   ) => void;
   sortConfig?: { field: string; direction: "asc" | "desc" };
   onSort?: (field: string) => void;
+  showCompleted?: boolean;
+  onToggleShowCompleted?: (checked: boolean) => void;
 }
 // ✅ COMPONENTE PARA CABEÇALHO ORDENÁVEL
 const SortableHeader = ({
@@ -188,6 +192,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   onFilterChange,
   sortConfig,
   onSort,
+  showCompleted,
+  onToggleShowCompleted,
 }) => {
   const [inputValue, setInputValue] = useState(searchTerm);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
@@ -337,8 +343,6 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
           return "Em andamento";
         case "concluido":
           return "Concluído";
-        case "cancelado":
-          return "Cancelado";
         default:
           return status;
       }
@@ -435,12 +439,6 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
           variant: "default" as const,
           className: "bg-green-100 text-green-800 hover:bg-green-200",
         };
-      case "cancelado":
-        return {
-          label: "Cancelado",
-          variant: "destructive" as const,
-          className: "bg-red-100 text-red-800 hover:bg-red-200",
-        };
       case "em_andamento":
       default:
         return {
@@ -502,16 +500,34 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             </CardTitle>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+              {onToggleShowCompleted && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="showCompleted" 
+                    checked={showCompleted}
+                    onCheckedChange={(checked) => onToggleShowCompleted(checked as boolean)}
+                  />
+                  <Label 
+                    htmlFor="showCompleted" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Exibir Concluídos
+                  </Label>
+                </div>
+              )}
+              
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="Buscar processos..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
+                  className="pl-10 w-full sm:w-80 min-w-[250px]"  // Aumentado de sm:w-64 para sm:w-80 (320px) e adicionado min-w para largura mínima
                   // disabled={isLoading} // Removido para evitar perda de foco
                 />
               </div>
+
+              
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -917,12 +933,10 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                             const statusColors: Record<string, string> = {
                               em_andamento: "bg-yellow-500",
                               concluido: "bg-green-500",
-                              cancelado: "bg-red-500"
                             };
                             const statusLabels: Record<string, string> = {
                               em_andamento: "Em andamento",
                               concluido: "Concluído",
-                              cancelado: "Cancelado"
                             };
                             return (
                               <div

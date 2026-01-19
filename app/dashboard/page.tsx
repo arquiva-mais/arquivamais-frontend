@@ -52,9 +52,12 @@ export default function DashboardPage() {
     data_fim: null,
   })
 
+  // Novo estado para o toggle
+  const [showCompleted, setShowCompleted] = useState(false)
+
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     objetos: [],
-    status: ["Concluído", "Em andamento", "Cancelado"],
+    status: [], // Empty status options so dropdown is hidden/empty
     setores: [],
     credores: [],
     responsaveis: [],
@@ -85,6 +88,22 @@ export default function DashboardPage() {
     }
   }
 
+  const buildBackendFilters = (filters: SelectedFilters, showCompletedState: boolean) => {
+    const backendFilters: ProcessFilters = {}
+
+    if (!showCompletedState) {
+      backendFilters.status = 'em_andamento'
+    }
+
+    if (filters.objeto) backendFilters.objeto = filters.objeto
+    if (filters.setor) backendFilters.setor = filters.setor
+    if (filters.credor) backendFilters.busca = filters.credor
+    if (filters.data_inicio) backendFilters.data_inicio = filters.data_inicio
+    if (filters.data_fim) backendFilters.data_fim = filters.data_fim
+
+    return backendFilters
+  }
+
   const handleFilterChange = (filterType: keyof SelectedFilters, value: string | null) => {
     const newFilters = {
       ...selectedFilters,
@@ -92,48 +111,22 @@ export default function DashboardPage() {
     }
 
     setSelectedFilters(newFilters)
-
-    const backendFilters: ProcessFilters = {}
-
-    if (newFilters.status === 'Concluído'){
-      newFilters.status = 'concluido'
-    } 
-    else if (newFilters.status === 'Em andamento') {
-      newFilters.status = 'em_andamento'
-    }
-    else if (newFilters.status === 'Cancelado') {
-      newFilters.status = 'cancelado'
-    }
-    else {
-      newFilters.status = ''
-    }
-
-    if (newFilters.objeto) {
-      backendFilters.objeto = newFilters.objeto
-    }
-
-    if (newFilters.status) {
-      backendFilters.status = newFilters.status
-    }
-
-    if (newFilters.setor) {
-      backendFilters.setor = newFilters.setor
-    }
-
-    if (newFilters.credor) {
-      backendFilters.busca = newFilters.credor
-    }
-
-    if (newFilters.data_inicio) {
-      backendFilters.data_inicio = newFilters.data_inicio
-    }
-
-    if (newFilters.data_fim) {
-      backendFilters.data_fim = newFilters.data_fim
-    }
-
+    const backendFilters = buildBackendFilters(newFilters, showCompleted)
     applyFilters(backendFilters)
   }
+
+  const handleToggleShowCompleted = (checked: boolean) => {
+    setShowCompleted(checked)
+    const backendFilters = buildBackendFilters(selectedFilters, checked)
+    applyFilters(backendFilters)
+  }
+
+  // Initial fetch respecting the default state (showCompleted=false)
+  useEffect(() => {
+    const initialFilters = buildBackendFilters(selectedFilters, showCompleted)
+    applyFilters(initialFilters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (processos.length > 0) {
@@ -207,6 +200,8 @@ export default function DashboardPage() {
           onFilterChange={handleFilterChange}
           sortConfig={sortConfig}
           onSort={handleSort}
+          showCompleted={showCompleted}
+          onToggleShowCompleted={handleToggleShowCompleted}
         />
       </main>
     </div>
