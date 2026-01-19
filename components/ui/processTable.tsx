@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronsUpDown,
+  Copy,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -39,12 +40,12 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { ProcessDetails } from "./processDetails"
-import { SearchableSelect } from "@/components/ui/searchable-select"
-import api, { setoresApi } from "@/services/api"
-import { useToast } from "@/components/providers/toastProvider"
-import { AlertTriangle } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { ProcessDetails } from "./processDetails";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import api, { setoresApi } from "@/services/api";
+import { useToast } from "@/components/providers/toastProvider";
+import { AlertTriangle } from "lucide-react";
 
 interface Processo {
   id?: number;
@@ -108,7 +109,7 @@ interface ProcessosTableProps {
   selectedFilters: SelectedFilters;
   onFilterChange: (
     filterType: keyof SelectedFilters,
-    value: string | null
+    value: string | null,
   ) => void;
   sortConfig?: { field: string; direction: "asc" | "desc" };
   onSort?: (field: string) => void;
@@ -260,7 +261,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       });
       showNotification(
         `Setor atualizado para ${sectorToUpdate.newSector}`,
-        "success"
+        "success",
       );
       onSearch(searchTerm); // Recarrega a lista mantendo a busca atual
       setSectorToUpdate(null);
@@ -302,11 +303,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   };
 
   const hasActiveFilters = Object.values(selectedFilters).some(
-    (value) => value !== null
+    (value) => value !== null,
   );
 
   const activeFiltersCount = Object.values(selectedFilters).filter(
-    (value) => value !== null
+    (value) => value !== null,
   ).length;
 
   const clearAllFilters = () => {
@@ -333,7 +334,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const renderFilterSubMenu = (
     filterType: keyof SelectedFilters,
     label: string,
-    options: string[]
+    options: string[],
   ) => {
     const selectedValue = selectedFilters[filterType];
 
@@ -502,32 +503,32 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
               {onToggleShowCompleted && (
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="showCompleted" 
+                  <Checkbox
+                    id="showCompleted"
                     checked={showCompleted}
-                    onCheckedChange={(checked) => onToggleShowCompleted(checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      onToggleShowCompleted(checked as boolean)
+                    }
                   />
-                  <Label 
-                    htmlFor="showCompleted" 
+                  <Label
+                    htmlFor="showCompleted"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Exibir Concluídos
                   </Label>
                 </div>
               )}
-              
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="Buscar processos..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="pl-10 w-full sm:w-80 min-w-[250px]"  // Aumentado de sm:w-64 para sm:w-80 (320px) e adicionado min-w para largura mínima
+                  className="pl-10 w-full sm:w-80 min-w-[250px]" // Aumentado de sm:w-64 para sm:w-80 (320px) e adicionado min-w para largura mínima
                   // disabled={isLoading} // Removido para evitar perda de foco
                 />
               </div>
-
-              
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -555,13 +556,13 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   {renderFilterSubMenu(
                     "objeto",
                     "Objeto",
-                    filterOptions.objetos
+                    filterOptions.objetos,
                   )}
 
                   {renderFilterSubMenu(
                     "status",
                     "Status",
-                    filterOptions.status
+                    filterOptions.status,
                   )}
 
                   {renderFilterSubMenu("setor", "Setor", filterOptions.setores)}
@@ -569,7 +570,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   {renderFilterSubMenu(
                     "credor",
                     "Credor",
-                    filterOptions.credores
+                    filterOptions.credores,
                   )}
 
                   <DropdownMenuSeparator />
@@ -593,7 +594,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                             onChange={(e) =>
                               onFilterChange(
                                 "data_inicio",
-                                e.target.value || null
+                                e.target.value || null,
                               )
                             }
                             className="pl-7 h-8 text-xs"
@@ -674,7 +675,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {['admin', 'user'].includes(userRole) && (
+              {["admin", "user"].includes(userRole) && (
                 <Button
                   onClick={handleLoadingPage}
                   className="w-full sm:w-auto cursor-pointer"
@@ -818,19 +819,19 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
-                      {Array.from({ length: ['admin', 'user'].includes(userRole) ? 9 : 8 }).map(
-                        (_, cellIndex) => (
-                          <TableCell key={cellIndex}>
-                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                          </TableCell>
-                        )
-                      )}
+                      {Array.from({
+                        length: ["admin", "user"].includes(userRole) ? 9 : 8,
+                      }).map((_, cellIndex) => (
+                        <TableCell key={cellIndex}>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))
                 ) : processos.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={['admin', 'user'].includes(userRole) ? 9 : 8}
+                      colSpan={["admin", "user"].includes(userRole) ? 9 : 8}
                       className="text-center py-8 text-slate-500"
                     >
                       {searchTerm || hasActiveFilters
@@ -858,20 +859,43 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           />
                         </Button>
                       </TableCell>
-                      <TableCell className="font-medium w-28 min-w-28 truncate" title={processo.numero_processo}>
-                        {processo.link_processo ? (
-                          <a
-                            href={processo.link_processo}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                            onClick={(e) => e.stopPropagation()}
+                      <TableCell
+                        className="font-medium w-28 min-w-28 truncate"
+                        title={processo.numero_processo}
+                      >
+                        <div className="flex items-center gap-2">
+                          {processo.link_processo ? (
+                            <a
+                              href={processo.link_processo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {processo.numero_processo}
+                            </a>
+                          ) : (
+                            <span>{processo.numero_processo}</span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(
+                                processo.numero_processo,
+                              );
+                              showNotification(
+                                "Número do processo copiado!",
+                                "success",
+                              );
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-slate-200 transition-colors"
+                            title="Copiar número do processo"
                           >
-                            {processo.numero_processo}
-                          </a>
-                        ) : (
-                          <span>{processo.numero_processo}</span>
-                        )}
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell
                         className="w-32 min-w-32 max-w-[140px] truncate"
@@ -891,13 +915,18 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                       >
                         {processo.orgao_gerador}
                       </TableCell>
-                      <TableCell className="w-32 min-w-32 max-w-[140px]" title={processo.setor_atual}>
+                      <TableCell
+                        className="w-32 min-w-32 max-w-[140px]"
+                        title={processo.setor_atual}
+                      >
                         {editingSectorId === processo.id ? (
                           <div className="w-full min-w-[140px]">
                             <SearchableSelect
                               options={availableSectors}
                               value={processo.setor_atual}
-                              onChange={(newValue) => handleSectorClick(processo, newValue)}
+                              onChange={(newValue) =>
+                                handleSectorClick(processo, newValue)
+                              }
                               placeholder="Selecione ou crie..."
                               isCreatable={true}
                               className="text-xs"
@@ -913,7 +942,9 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                               variant="outline"
                               className="cursor-pointer hover:bg-slate-100 flex items-center gap-1 truncate max-w-full"
                             >
-                              <span className="truncate">{processo.setor_atual}</span>
+                              <span className="truncate">
+                                {processo.setor_atual}
+                              </span>
                               <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
                             </Badge>
                           </Button>
@@ -921,10 +952,16 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                       </TableCell>
                       <TableCell className="w-20 min-w-20 text-center">
                         <Badge variant="secondary" className="font-normal">
-                          {processo.dias_no_setor !== null && processo.dias_no_setor !== undefined ? `${processo.dias_no_setor}d` : '-'}
+                          {processo.dias_no_setor !== null &&
+                          processo.dias_no_setor !== undefined
+                            ? `${processo.dias_no_setor}d`
+                            : "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium w-28 min-w-28 text-right truncate" title={formatCurrency(getTotalValue(processo))}>
+                      <TableCell
+                        className="font-medium w-28 min-w-28 text-right truncate"
+                        title={formatCurrency(getTotalValue(processo))}
+                      >
                         {formatCurrency(getTotalValue(processo))}
                       </TableCell>
                       <TableCell className="w-16 text-center">
@@ -941,11 +978,14 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                             return (
                               <div
                                 className={`w-3 h-3 rounded-full ${statusColors[processo.status] || "bg-gray-400"}`}
-                                title={statusLabels[processo.status] || processo.status}
+                                title={
+                                  statusLabels[processo.status] ||
+                                  processo.status
+                                }
                               />
                             );
                           })()}
-                          {['admin', 'user'].includes(userRole) && (
+                          {["admin", "user"].includes(userRole) && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -961,7 +1001,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     </TableRow>,
                     <TableRow key={`details-${processo.id || index}`}>
                       <TableCell
-                        colSpan={['admin', 'user'].includes(userRole) ? 10 : 9}
+                        colSpan={["admin", "user"].includes(userRole) ? 10 : 9}
                         className="p-0"
                       >
                         <ProcessDetails
@@ -983,7 +1023,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} a{" "}
                 {Math.min(
                   pagination.currentPage * pagination.itemsPerPage,
-                  pagination.totalItems
+                  pagination.totalItems,
                 )}{" "}
                 de {pagination.totalItems} processos
               </p>
@@ -1029,7 +1069,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           {pageNumber}
                         </Button>
                       );
-                    }
+                    },
                   )}
                 </div>
 
