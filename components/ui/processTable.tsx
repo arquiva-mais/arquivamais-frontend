@@ -231,6 +231,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   } | null>(null);
   const [isUpdatingSector, setIsUpdatingSector] = useState(false);
   const [editingSectorId, setEditingSectorId] = useState<number | null>(null);
+  const [movementDate, setMovementDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const handleSectorClick = (processo: Processo, newSector: string) => {
     if (!newSector || processo.setor_atual === newSector) {
@@ -238,6 +239,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       return;
     }
 
+    setMovementDate(new Date().toISOString().split('T')[0]);
     setSectorToUpdate({
       processId: processo.id!,
       newSector,
@@ -258,6 +260,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     try {
       await api.patch(`/processos/${sectorToUpdate.processId}/setor`, {
         setor_atual: sectorToUpdate.newSector,
+        data_tramitacao: movementDate,
       });
       showNotification(
         `Setor atualizado para ${sectorToUpdate.newSector}`,
@@ -1115,6 +1118,26 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   "{sectorToUpdate.newSector}"
                 </span>
                 ?
+              </p>
+            </div>
+
+            <div className="w-full mb-6 text-left">
+              <Label htmlFor="movement-date" className="text-sm font-medium text-slate-700 mb-1 block">
+                Data da Tramitação
+              </Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  id="movement-date"
+                  type="date"
+                  value={movementDate}
+                  onChange={(e) => setMovementDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="pl-10 w-full"
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Se a movimentação física ocorreu antes, selecione a data correta.
               </p>
             </div>
 
