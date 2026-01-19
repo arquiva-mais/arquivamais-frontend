@@ -46,6 +46,13 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import api, { setoresApi } from "@/services/api";
 import { useToast } from "@/components/providers/toastProvider";
 import { AlertTriangle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Processo {
   id?: number;
@@ -115,6 +122,7 @@ interface ProcessosTableProps {
   onSort?: (field: string) => void;
   showCompleted?: boolean;
   onToggleShowCompleted?: (checked: boolean) => void;
+  onItemsPerPageChange?: (limit: number) => void;
 }
 // ✅ COMPONENTE PARA CABEÇALHO ORDENÁVEL
 const SortableHeader = ({
@@ -195,6 +203,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   onSort,
   showCompleted,
   onToggleShowCompleted,
+  onItemsPerPageChange,
 }) => {
   const [inputValue, setInputValue] = useState(searchTerm);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
@@ -1019,61 +1028,101 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             </Table>
           </div>
 
-          {!isLoading && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-slate-600">
-                Mostrando{" "}
-                {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} a{" "}
-                {Math.min(
-                  pagination.currentPage * pagination.itemsPerPage,
-                  pagination.totalItems,
-                )}{" "}
-                de {pagination.totalItems} processos
-              </p>
+          {!isLoading && pagination.totalItems > 0 && (
+            <div className="flex flex-col md:flex-row items-center justify-between mt-4 gap-4">
+              <div className="flex items-center gap-4 text-sm text-slate-600 order-2 md:order-1">
+                <div className="flex items-center gap-2">
+                  <span>Itens por página:</span>
+                  {onItemsPerPageChange && (
+                    <Select
+                      value={pagination.itemsPerPage.toString()}
+                      onValueChange={(val) => onItemsPerPageChange(Number(val))}
+                    >
+                      <SelectTrigger className="w-[70px] h-8">
+                        <SelectValue placeholder="10" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="30">30</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <span>
+                  Mostrando{" "}
+                  {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} -{" "}
+                  {Math.min(
+                    pagination.currentPage * pagination.itemsPerPage,
+                    pagination.totalItems
+                  )}{" "}
+                  de {pagination.totalItems}
+                </span>
+              </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 order-1 md:order-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onPreviousPage}
                   disabled={pagination.currentPage === 1}
-                  className="cursor-pointer"
+                  className="h-8 w-8 p-0 cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Anterior
                 </Button>
 
                 <div className="flex items-center space-x-1">
-                  {Array.from(
-                    { length: Math.min(5, pagination.totalPages) },
-                    (_, i) => {
-                      let pageNumber;
-                      if (pagination.totalPages <= 5) {
-                        pageNumber = i + 1;
-                      } else {
-                        const start = Math.max(1, pagination.currentPage - 2);
-                        pageNumber = start + i;
-                      }
+                  {(() => {
+                    const pages: React.ReactNode[] = [];
+                    const { currentPage, totalPages } = pagination;
 
-                      if (pageNumber > pagination.totalPages) return null;
-
-                      return (
+                    const pushPage = (p: number) => {
+                      pages.push(
                         <Button
-                          key={pageNumber}
-                          variant={
-                            pagination.currentPage === pageNumber
-                              ? "default"
-                              : "outline"
-                          }
+                          key={p}
+                          variant={currentPage === p ? "default" : "outline"}
                           size="sm"
-                          onClick={() => onPageChange(pageNumber)}
+                          onClick={() => onPageChange(p)}
                           className="w-8 h-8 p-0 cursor-pointer"
                         >
-                          {pageNumber}
+                          {p}
                         </Button>
                       );
-                    },
-                  )}
+                    };
+
+                    const pushEllipsis = (key: string) => {
+                      pages.push(
+                        <span key={key} className="px-1">
+                          ...
+                        </span>
+                      );
+                    };
+
+                    if (totalPages <= 7) {
+                      for (let i = 1; i <= totalPages; i++) pushPage(i);
+                    } else {
+                      pushPage(1);
+                      if (currentPage > 3) pushEllipsis("start");
+
+                      let start = Math.max(2, currentPage - 1);
+                      let end = Math.min(totalPages - 1, currentPage + 1);
+
+                      if (currentPage <= 3) {
+                        start = 2;
+                        end = 4;
+                      }
+                      if (currentPage >= totalPages - 2) {
+                        start = totalPages - 3;
+                        end = totalPages - 1;
+                      }
+
+                      for (let i = start; i <= end; i++) pushPage(i);
+
+                      if (currentPage < totalPages - 2) pushEllipsis("end");
+                      pushPage(totalPages);
+                    }
+                    return pages;
+                  })()}
                 </div>
 
                 <Button
@@ -1081,11 +1130,38 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   size="sm"
                   onClick={onNextPage}
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="cursor-pointer"
+                  className="h-8 w-8 p-0 cursor-pointer"
                 >
-                  Próxima
                   <ChevronRight className="w-4 h-4" />
                 </Button>
+
+                {/* Jump to Page */}
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-sm text-slate-500 whitespace-nowrap">Ir para:</span>
+                  <Input
+                    className="w-12 h-8 px-1 text-center"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const val = parseInt(e.currentTarget.value);
+                        if (
+                          !isNaN(val) &&
+                          val >= 1 &&
+                          val <= pagination.totalPages
+                        ) {
+                          onPageChange(val);
+                          e.currentTarget.value = ""; // Clear input after jump? Or keep it?
+                          // Keeping it might be better UX, clearing often better if reusing. User didn't specify.
+                          // I'll clear it for feedback.
+                          e.currentTarget.value = "";
+                        }
+                      }
+                    }}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) e.preventDefault();
+                    }}
+                    placeholder="#"
+                  />
+                </div>
               </div>
             </div>
           )}

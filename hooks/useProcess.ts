@@ -121,13 +121,15 @@ export const useProcess = () => {
     page: number = 1,
     search: string = "",
     filters: ProcessFilters = {},
-    sort: SortConfig = { field: '', direction: 'asc' }
+    sort: SortConfig = { field: '', direction: 'asc' },
+    limit?: number
   ) => {
     setLoading(true)
     try {
+      const itemsPerPage = limit || pagination.itemsPerPage
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: pagination.itemsPerPage.toString()
+        limit: itemsPerPage.toString()
       })
 
       if (search.trim()) {
@@ -161,11 +163,12 @@ export const useProcess = () => {
       const data: ProcessosResponse = response.data
 
       let processosData: Processo[] = []
+      const currentItemsPerPage = limit || pagination.itemsPerPage
       let paginationData: PaginationInfo = {
         currentPage: page,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: pagination.itemsPerPage
+        itemsPerPage: currentItemsPerPage
       }
 
       if (data.processos) {
@@ -174,15 +177,15 @@ export const useProcess = () => {
           currentPage: page,
           totalPages: 1,
           totalItems: data.processos.length,
-          itemsPerPage: 10
+          itemsPerPage: currentItemsPerPage
         }
       } else if (data.rows) {
         processosData = data.rows
         paginationData = {
           currentPage: page,
-          totalPages: Math.ceil((data.count || 0) / pagination.itemsPerPage),
+          totalPages: Math.ceil((data.count || 0) / currentItemsPerPage),
           totalItems: data.count || 0,
-          itemsPerPage: pagination.itemsPerPage
+          itemsPerPage: currentItemsPerPage
         }
       } else if (Array.isArray(data)) {
         processosData = data
@@ -190,7 +193,7 @@ export const useProcess = () => {
           currentPage: page,
           totalPages: 1,
           totalItems: data.length,
-          itemsPerPage: pagination.itemsPerPage
+          itemsPerPage: currentItemsPerPage
         }
       }
 
@@ -279,6 +282,10 @@ export const useProcess = () => {
     fetchProcessos(1, searchTerm, currentFilters, newSortConfig)
   }
 
+  const changeItemsPerPage = (newLimit: number) => {
+    fetchProcessos(1, searchTerm, currentFilters, sortConfig, newLimit)
+  }
+
   return {
     processos: processos || [],
     isLoading,
@@ -291,6 +298,7 @@ export const useProcess = () => {
     goToPage,
     nextPage,
     previousPage,
+    changeItemsPerPage,
     searchProcessos,
     fetchAllProcessos,
     fetchProcessos,

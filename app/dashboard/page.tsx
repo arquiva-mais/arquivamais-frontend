@@ -78,6 +78,7 @@ export default function DashboardPage() {
     searchProcessos,
     applyFilters,
     //clearFilters
+    changeItemsPerPage
   } = useProcess()
 
   const decodedToken = (token: string) => {
@@ -202,6 +203,7 @@ export default function DashboardPage() {
           onSort={handleSort}
           showCompleted={showCompleted}
           onToggleShowCompleted={handleToggleShowCompleted}
+          onItemsPerPageChange={changeItemsPerPage}
         />
       </main>
     </div>
