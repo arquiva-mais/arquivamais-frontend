@@ -78,7 +78,8 @@ export default function DashboardPage() {
     searchProcessos,
     applyFilters,
     //clearFilters
-    changeItemsPerPage
+    changeItemsPerPage,
+    refetch
   } = useProcess()
 
   const decodedToken = (token: string) => {
@@ -188,6 +189,7 @@ export default function DashboardPage() {
           searchTerm={searchTerm}
           onPageChange={goToPage}
           onSearch={searchProcessos}
+          onRefresh={refetch}
           onNextPage={nextPage}
           onPreviousPage={previousPage}
           filterOptions={{

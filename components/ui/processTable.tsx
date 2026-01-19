@@ -123,6 +123,7 @@ interface ProcessosTableProps {
   showCompleted?: boolean;
   onToggleShowCompleted?: (checked: boolean) => void;
   onItemsPerPageChange?: (limit: number) => void;
+  onRefresh?: () => void;
 }
 // ✅ COMPONENTE PARA CABEÇALHO ORDENÁVEL
 const SortableHeader = ({
@@ -204,6 +205,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   showCompleted,
   onToggleShowCompleted,
   onItemsPerPageChange,
+  onRefresh,
 }) => {
   const [inputValue, setInputValue] = useState(searchTerm);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
@@ -275,7 +277,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
         `Setor atualizado para ${sectorToUpdate.newSector}`,
         "success",
       );
-      onSearch(searchTerm); // Recarrega a lista mantendo a busca atual
+      if (onRefresh) {
+        onRefresh();
+      } else {
+        onSearch(searchTerm); // Fallback
+      }
       setSectorToUpdate(null);
     } catch (error) {
       console.error("Erro ao atualizar setor", error);

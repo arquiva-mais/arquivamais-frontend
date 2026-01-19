@@ -197,6 +197,12 @@ export const useProcess = () => {
         }
       }
 
+      // UX Improvement: Auto-navigate to previous page if current page is empty
+      if (processosData.length === 0 && page > 1) {
+         fetchProcessos(page - 1, search, filters, sort, limit);
+         return; 
+      }
+
       setProcessos(processosData)
       setPagination(paginationData)
       localStorage.setItem("processos", JSON.stringify(processosData))
