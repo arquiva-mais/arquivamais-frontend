@@ -59,6 +59,7 @@ function NovoProcessoPageContent() {
       return {
         id: searchParams.get('id') || '',
         numero_processo: searchParams.get('numero_processo') || '',
+        data_criacao_docgo: searchParams.get('data_criacao_docgo') || '',
         data_entrada: searchParams.get('data_entrada') || '',
         competencia: searchParams.get('competencia') || '',
         objeto: searchParams.get('objeto') || '',
@@ -79,6 +80,7 @@ function NovoProcessoPageContent() {
     return {
       id: '',
       numero_processo: '',
+      data_criacao_docgo: '',
       data_entrada: '',
       competencia: '',
       objeto: '',

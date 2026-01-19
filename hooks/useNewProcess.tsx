@@ -5,6 +5,7 @@ import api from '@/services/api'
 
 export interface NovoProcesso {
   numero_processo: string
+  data_criacao_docgo?: string
   data_entrada: string
   competencia: string
   objeto: string
@@ -23,6 +24,7 @@ export interface NovoProcesso {
 
 const initialFormData: NovoProcesso = {
   numero_processo: "",
+  data_criacao_docgo: "",
   data_entrada: new Date().toISOString().split("T")[0],
   competencia: '',
   objeto: "",
@@ -65,7 +67,9 @@ export const useNewProcess = () => {
       newErrors.numero_processo = 'Número do processo é obrigatório'
     }
     if (!formData.data_entrada) {
-      newErrors.data_entrada = 'Data de entrada é obrigatória'
+      newErrors.data_entrada = 'Data da última tramitação é obrigatória'
+    } else if (formData.data_criacao_docgo && formData.data_entrada < formData.data_criacao_docgo) {
+      newErrors.data_entrada = 'A última tramitação não pode ser antes da criação (DocGO)'
     }
     // Competência agora é opcional
     // if (!formData.competencia) {

@@ -73,7 +73,7 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
         <CardTitle>Informações Básicas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numero_processo">Número do Processo *</Label>
             <Input
@@ -86,44 +86,40 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
             {renderError("numero_processo")}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="data_entrada">Data de Entrada *</Label>
-              <Input
-                id="data_entrada"
-                type="date"
-                value={formData.data_entrada}
-                onChange={(e) => onInputChange("data_entrada", e.target.value)}
-                className={getErrorClass("data_entrada")}
-              />
-              {renderError("data_entrada")}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="data_criacao_docgo">Data de Criação (DocGO)</Label>
+            <Input
+              id="data_criacao_docgo"
+              type="date"
+              value={formData.data_criacao_docgo || ""}
+              onChange={(e) => onInputChange("data_criacao_docgo", e.target.value)}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="competencia">Competência</Label>
-              <Select
-                value={formData.competencia}
-                onValueChange={(value) => onInputChange("competencia", value === "clear" ? "" : value)}
+          <div className="space-y-2">
+            <Label htmlFor="competencia">Competência</Label>
+            <Select
+              value={formData.competencia}
+              onValueChange={(value) => onInputChange("competencia", value === "clear" ? "" : value)}
+            >
+              <SelectTrigger
+                id="competencia"
+                className={getErrorClass("competencia")}
               >
-                <SelectTrigger
-                  id="competencia"
-                  className={getErrorClass("competencia")}
-                >
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="clear" className="text-slate-500 italic">
-                    Limpar seleção
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="clear" className="text-slate-500 italic">
+                  Limpar seleção
+                </SelectItem>
+                {MESES.map((mes) => (
+                  <SelectItem key={mes} value={mes}>
+                    {mes}
                   </SelectItem>
-                  {MESES.map((mes) => (
-                    <SelectItem key={mes} value={mes}>
-                      {mes}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {renderError("competencia")}
-            </div>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderError("competencia")}
           </div>
         </div>
 
@@ -184,6 +180,21 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
               onManage={() => toggleModal('setor', true)}
               error={!isEditMode && errors.setor_atual ? errors.setor_atual : undefined}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="data_entrada">Data da Última Tramitação *</Label>
+            <Input
+              id="data_entrada"
+              type="date"
+              value={formData.data_entrada}
+              onChange={(e) => onInputChange("data_entrada", e.target.value)}
+              className={getErrorClass("data_entrada")}
+            />
+            {renderError("data_entrada")}
+            <p className="text-[11px] text-slate-500">
+              Define o início da contagem de dias neste setor.
+            </p>
           </div>
         </div>
 

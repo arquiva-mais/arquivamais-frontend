@@ -23,6 +23,7 @@ interface Processo {
    update_for?: string
    createdAt?: string
    data_atualizacao?: string
+   data_criacao_docgo?: string
    dias_no_setor?: number
 }
 
@@ -80,7 +81,15 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                      <p className="text-sm">{processo.numero_processo}</p>
                   </div>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Data de Entrada:</span>
+                     <span className="text-sm font-medium text-gray-600">Data Criação (DocGO):</span>
+                     <p className="text-sm">
+                        {processo.data_criacao_docgo 
+                           ? formatDateLocal(processo.data_criacao_docgo.split('T')[0])
+                           : '-'}
+                     </p>
+                  </div>
+                  <div>
+                     <span className="text-sm font-medium text-gray-600">Última Tramitação:</span>
                      <p className="text-sm">{formatDateLocal(processo.data_entrada.split('T')[0])}</p>
                   </div>
                   <div>

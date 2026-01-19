@@ -57,6 +57,7 @@ import {
 interface Processo {
   id?: number;
   numero_processo: string;
+  data_criacao_docgo?: string;
   data_entrada: string;
   competencia: string;
   objeto: string;
@@ -409,6 +410,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     const params = new URLSearchParams({
       id: processo.id?.toString() || "",
       numero_processo: processo.numero_processo,
+      data_criacao_docgo: processo.data_criacao_docgo || "",
       data_entrada: processo.data_entrada,
       competencia: processo.competencia,
       objeto: processo.objeto,
@@ -1219,7 +1221,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 />
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Se a movimentação física ocorreu antes, selecione a data correta.
+                Data em que o processo chegou neste setor (reinicia a contagem de dias).
               </p>
             </div>
 
