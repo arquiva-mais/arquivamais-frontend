@@ -510,15 +510,15 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-xl font-semibold">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 md:gap-4">
+            <CardTitle className="text-base sm:text-lg md:text-xl font-semibold">
               Processos
               {isLoading && (
                 <Loader2 className="w-4 h-4 ml-2 animate-spin inline" />
               )}
             </CardTitle>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto items-center">
               {onToggleShowCompleted && (
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -543,7 +543,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   placeholder="Buscar processos..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="pl-10 w-full sm:w-80 min-w-[250px]" // Aumentado de sm:w-64 para sm:w-80 (320px) e adicionado min-w para largura mínima
+                  className="pl-10 w-full sm:w-32 md:w-40 lg:w-56 xl:w-64 min-w-[140px]"
                   // disabled={isLoading} // Removido para evitar perda de foco
                 />
               </div>
@@ -696,7 +696,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
               {["admin", "user"].includes(userRole) && (
                 <Button
                   onClick={handleLoadingPage}
-                  className="w-full sm:w-auto cursor-pointer"
+                  className="w-full sm:w-32 md:w-auto cursor-pointer"
                   disabled={isLoadingPage}
                 >
                   {isLoadingPage ? (
