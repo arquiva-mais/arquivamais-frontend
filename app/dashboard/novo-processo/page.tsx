@@ -116,6 +116,9 @@ function NovoProcessoPageContent() {
     }
 
     if (isEditMode) {
+      const returnPage = searchParams.get('returnPage')
+      const returnPath = returnPage ? `/dashboard?page=${returnPage}` : "/dashboard"
+
       editForm(
         editFormData,
         Number(editFormData.id),
@@ -126,7 +129,8 @@ function NovoProcessoPageContent() {
         (error) => {
           showNotification(error, 'error')
           setIsLoading(false)
-        }
+        },
+        returnPath
       )
     } else {
       submitForm(

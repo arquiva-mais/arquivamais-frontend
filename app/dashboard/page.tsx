@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { Suspense, useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { DashboardHeader } from "@/components/ui/header"
 // import { StatsCards } from "@/components/ui/statsCards"
 import { ProcessTable } from "@/components/ui/processTable"
@@ -9,38 +9,11 @@ import { useProcess, type ProcessFilters } from "@/hooks/useProcess"
 
 import { decodeJwt } from 'jose'
 
-interface TokenPayload {
-  id?: string
-  email?: string
-  role?: string
-  exp?: number
-  iat?: number
-  [key: string]: string | number | undefined
-}
-
-interface FilterOptions {
-  objetos: string[]
-  status: string[]
-  setores: string[]
-  credores: string[]
-  responsaveis: string[]
-}
-
-interface SelectedFilters {
-  objeto: string | null
-  status: string | null
-  setor: string | null
-  credor: string | null
-  responsavel: string | null
-  data_inicio: string | null
-  data_fim: string | null
-  dateField: string | null
-}
-
-export default function DashboardPage() {
+function DashboardContent() {
   const [userName, setUserName] = useState("")
   const [userRole, setUserRole] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams() // Moved up for scope access
 
   // ✅ Estado atualizado
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
@@ -120,18 +93,24 @@ export default function DashboardPage() {
 
     setSelectedFilters(newFilters)
     const backendFilters = buildBackendFilters(newFilters)
-    applyFilters(backendFilters)
+    // Always reset to page 1 on filter change
+    applyFilters(backendFilters, 1)
   }
 
-  // Initial fetch respecting the default state
+  // Initial fetch respecting the default state and URL params
+
   useEffect(() => {
+    // Get initial page from URL or default to 1
+    const pageParam = searchParams.get('page')
+    const initialPage = pageParam ? parseInt(pageParam) : 1
+
     // Inicializa com status 'em_andamento'
     if (!selectedFilters.status) {
       setSelectedFilters(prev => ({ ...prev, status: 'em_andamento' }))
-      applyFilters({ status: 'em_andamento' })
+      applyFilters({ status: 'em_andamento' }, initialPage)
     } else {
       const initialFilters = buildBackendFilters(selectedFilters)
-      applyFilters(initialFilters)
+      applyFilters(initialFilters, initialPage)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -215,5 +194,41 @@ export default function DashboardPage() {
         />
       </main>
     </div>
+  )
+}
+
+interface TokenPayload {
+  id?: string
+  email?: string
+  role?: string
+  exp?: number
+  iat?: number
+  [key: string]: string | number | undefined
+}
+
+interface FilterOptions {
+  objetos: string[]
+  status: string[]
+  setores: string[]
+  credores: string[]
+  responsaveis: string[]
+}
+
+interface SelectedFilters {
+  objeto: string | null
+  status: string | null
+  setor: string | null
+  credor: string | null
+  responsavel: string | null
+  data_inicio: string | null
+  data_fim: string | null
+  dateField: string | null
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }

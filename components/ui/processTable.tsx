@@ -491,6 +491,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       valor_royalties: processo.valor_royalties.toString(),
       status: processo.status,
       mode: "edit",
+      returnPage: pagination?.currentPage.toString() || "1"
     });
 
     router.push(`/dashboard/novo-processo?${params.toString()}`);

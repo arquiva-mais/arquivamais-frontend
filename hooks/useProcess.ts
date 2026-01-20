@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import api from '@/services/api'
 
@@ -72,6 +72,18 @@ export const useProcess = () => {
     totalItems: 0,
     itemsPerPage: 10
   })
+  
+  // Persist itemsPerPage
+  useEffect(() => {
+    // Only run on client
+    if (typeof window !== 'undefined') {
+      const storedItemsPerPage = localStorage.getItem('itemsPerPage');
+      if (storedItemsPerPage) {
+        setPagination(prev => ({ ...prev, itemsPerPage: Number(storedItemsPerPage) }));
+      }
+    }
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("")
   const [currentFilters, setCurrentFilters] = useState<ProcessFilters>({})
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: '', direction: 'asc' })
@@ -84,6 +96,14 @@ export const useProcess = () => {
     totalValorRoyalties: 0
   })
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const pageParam = searchParams.get('page')
+    if (pageParam) {
+      setPagination(prev => ({ ...prev, currentPage: Number(pageParam) }))
+    }
+  }, [searchParams])
 
   const calcularTotaisFinanceirosProcessos = (processos: AllProcessosResponse[]) => {
     return processos.reduce((acc, processo) => {
@@ -127,7 +147,13 @@ export const useProcess = () => {
   ) => {
     setLoading(true)
     try {
-      const itemsPerPage = limit || pagination.itemsPerPage
+      // Prioritize limit arg, then localStorage, then state, then default
+      let itemsPerPage = limit || pagination.itemsPerPage;
+      if (!limit && typeof window !== 'undefined') {
+         const stored = localStorage.getItem('itemsPerPage');
+         if (stored) itemsPerPage = Number(stored);
+      }
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: itemsPerPage.toString()
@@ -247,15 +273,14 @@ export const useProcess = () => {
       fetchProcessos(page, searchTerm, currentFilters)
     }
   }
-
-  const searchProcessos = (search: string) => {
-    setSearchTerm(search)
-    fetchProcessos(1, search, currentFilters)
+  const searchProcessos = (term: string) => {
+    setSearchTerm(term)
+    fetchProcessos(1, term, currentFilters)
   }
 
-  const applyFilters = (filters: ProcessFilters) => {
+  const applyFilters = (filters: ProcessFilters, page: number = 1) => {
     setCurrentFilters(filters)
-    fetchProcessos(1, searchTerm, filters)
+    fetchProcessos(page, searchTerm, filters)
   }
 
   const clearFilters = () => {
@@ -293,6 +318,7 @@ export const useProcess = () => {
   }
 
   const changeItemsPerPage = (newLimit: number) => {
+    localStorage.setItem('itemsPerPage', newLimit.toString());
     fetchProcessos(1, searchTerm, currentFilters, sortConfig, newLimit)
   }
 

@@ -143,7 +143,7 @@ export const useNewProcess = () => {
     }
   }
 
-  const editForm = async (editFormData: any, idProcess?: number, onSuccess?: () => void, onError?: (message: string) => void) => {
+  const editForm = async (editFormData: any, idProcess?: number, onSuccess?: () => void, onError?: (message: string) => void, returnPath: string = "/dashboard") => {
     //if (!validateForm()) return
     setLoading(true)
 
@@ -158,7 +158,7 @@ export const useNewProcess = () => {
       })
 
       onSuccess?.()
-      router.push("/dashboard")
+      router.push(returnPath)
     } catch (error) {
 
       if (axios.isAxiosError(error)) {
