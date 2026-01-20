@@ -50,12 +50,13 @@ interface ProcessosResponse {
 interface ProcessFilters {
   busca?: string
   concluido?: boolean | string
+  status?: string
   setor?: string
   objeto?: string
   data_inicio?: string
   data_fim?: string
   orgao_id?: string
-  status?: string
+  dateField?: string
 }
 interface SortConfig {
   field: string
@@ -150,6 +151,9 @@ export const useProcess = () => {
       }
       if (filters.data_fim) {
         params.append('data_fim', filters.data_fim)
+      }
+      if (filters.dateField) {
+        params.append('dateField', filters.dateField)
       }
       if (filters.orgao_id) {
         params.append('orgao_id', filters.orgao_id)

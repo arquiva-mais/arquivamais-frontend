@@ -34,6 +34,7 @@ interface SelectedFilters {
   responsavel: string | null
   data_inicio: string | null
   data_fim: string | null
+  dateField: string | null
 }
 
 export default function DashboardPage() {
@@ -44,16 +45,14 @@ export default function DashboardPage() {
   // ✅ Estado atualizado
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     objeto: null,
-    status: null,
+    status: 'em_andamento', // Default explícito
     setor: null,
     credor: null,
     responsavel: null,
     data_inicio: null,
     data_fim: null,
+    dateField: null
   })
-
-  // Novo estado para o toggle
-  const [showCompleted, setShowCompleted] = useState(false)
 
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     objetos: [],
@@ -90,11 +89,16 @@ export default function DashboardPage() {
     }
   }
 
-  const buildBackendFilters = (filters: SelectedFilters, showCompletedState: boolean) => {
-    const backendFilters: ProcessFilters = {}
+  const buildBackendFilters = (filters: SelectedFilters) => {
+    const backendFilters: ProcessFilters = {
+      // Default: em_andamento se não especificado
+      status: filters.status || 'em_andamento'
+    }
 
-    if (!showCompletedState) {
-      backendFilters.status = 'em_andamento'
+    if (filters.status === 'todos') {
+      delete backendFilters.status; // Remove o filtro para trazer todos
+    } else if (filters.status) {
+      backendFilters.status = filters.status;
     }
 
     if (filters.objeto) backendFilters.objeto = filters.objeto
@@ -102,6 +106,8 @@ export default function DashboardPage() {
     if (filters.credor) backendFilters.busca = filters.credor
     if (filters.data_inicio) backendFilters.data_inicio = filters.data_inicio
     if (filters.data_fim) backendFilters.data_fim = filters.data_fim
+    // Sempre enviar dateField, usando o valor selecionado ou o padrão
+    backendFilters.dateField = filters.dateField || 'data_entrada'
 
     return backendFilters
   }
@@ -113,20 +119,20 @@ export default function DashboardPage() {
     }
 
     setSelectedFilters(newFilters)
-    const backendFilters = buildBackendFilters(newFilters, showCompleted)
+    const backendFilters = buildBackendFilters(newFilters)
     applyFilters(backendFilters)
   }
 
-  const handleToggleShowCompleted = (checked: boolean) => {
-    setShowCompleted(checked)
-    const backendFilters = buildBackendFilters(selectedFilters, checked)
-    applyFilters(backendFilters)
-  }
-
-  // Initial fetch respecting the default state (showCompleted=false)
+  // Initial fetch respecting the default state
   useEffect(() => {
-    const initialFilters = buildBackendFilters(selectedFilters, showCompleted)
-    applyFilters(initialFilters)
+    // Inicializa com status 'em_andamento'
+    if (!selectedFilters.status) {
+      setSelectedFilters(prev => ({ ...prev, status: 'em_andamento' }))
+      applyFilters({ status: 'em_andamento' })
+    } else {
+      const initialFilters = buildBackendFilters(selectedFilters)
+      applyFilters(initialFilters)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -203,8 +209,8 @@ export default function DashboardPage() {
           onFilterChange={handleFilterChange}
           sortConfig={sortConfig}
           onSort={handleSort}
-          showCompleted={showCompleted}
-          onToggleShowCompleted={handleToggleShowCompleted}
+          showCompleted={false} // Deprecated prop
+          onToggleShowCompleted={() => {}} // Deprecated prop
           onItemsPerPageChange={changeItemsPerPage}
         />
       </main>

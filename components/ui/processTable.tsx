@@ -28,6 +28,7 @@ import {
   ChevronsUpDown,
   Copy,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -95,6 +96,7 @@ interface SelectedFilters {
   responsavel: string | null;
   data_inicio: string | null;
   data_fim: string | null;
+  dateField?: string | null;
 }
 
 interface ProcessosTableProps {
@@ -212,9 +214,62 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [availableSectors, setAvailableSectors] = useState<string[]>([]);
+  
+  // States para debounce das datas
+  const [localStartDate, setLocalStartDate] = useState(selectedFilters.data_inicio || "");
+  const [localEndDate, setLocalEndDate] = useState(selectedFilters.data_fim || "");
+
+  // Sync local states com props
+  useEffect(() => {
+    setLocalStartDate(selectedFilters.data_inicio || "");
+  }, [selectedFilters.data_inicio]);
+
+  useEffect(() => {
+    setLocalEndDate(selectedFilters.data_fim || "");
+  }, [selectedFilters.data_fim]);
+
+  const { showNotification } = useToast();
+
+  // Debounce effects
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Evita disparar se o valor for igual (ex: na montagem ou sync)
+      // Normaliza para string vazia para comparação
+      const currentValue = selectedFilters.data_inicio || "";
+      if (localStartDate !== currentValue) {
+        onFilterChange("data_inicio", localStartDate || null);
+
+        // Se a data inicio mudou e ficou maior que a fim, limpa a fim e notifica
+        if (localEndDate && localStartDate && localStartDate > localEndDate) {
+            setLocalEndDate("");
+            onFilterChange("data_fim", null);
+            showNotification("Data fim limpa para manter consistência", "warning");
+        }
+      }
+    }, 800); // 800ms debounce
+    return () => clearTimeout(timer);
+  }, [localStartDate, selectedFilters.data_inicio, onFilterChange, localEndDate, showNotification]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentValue = selectedFilters.data_fim || "";
+
+      // Validação: data fim não pode ser menor que data inicio
+      if (localEndDate && localStartDate && localEndDate < localStartDate) {
+          showNotification("A data fim não pode ser menor que a data início", "error");
+          setLocalEndDate("");
+          onFilterChange("data_fim", null);
+          return;
+      }
+
+      if (localEndDate !== currentValue) {
+        onFilterChange("data_fim", localEndDate || null);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [localEndDate, selectedFilters.data_fim, onFilterChange, localStartDate, showNotification]);
 
   const router = useRouter();
-  const { showNotification } = useToast();
 
   useEffect(() => {
     const loadSectors = async () => {
@@ -321,12 +376,22 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     );
   };
 
-  const hasActiveFilters = Object.values(selectedFilters).some(
-    (value) => value !== null,
+  const hasActiveFilters = Object.entries(selectedFilters).some(
+    ([key, value]) => {
+      // Ignorar dateField
+      if (key === "dateField") return false;
+      // Ignorar status quando for o valor padrão 'em_andamento'
+      if (key === "status" && value === "em_andamento") return false;
+      return value !== null;
+    }
   );
 
-  const activeFiltersCount = Object.values(selectedFilters).filter(
-    (value) => value !== null,
+  const activeFiltersCount = Object.entries(selectedFilters).filter(
+    ([key, value]) => {
+      if (key === "dateField") return false;
+      if (key === "status" && value === "em_andamento") return false;
+      return value !== null;
+    }
   ).length;
 
   const clearAllFilters = () => {
@@ -456,12 +521,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     switch (status) {
       case "concluido":
         return {
-          label: "Concluído",
           variant: "default" as const,
           className: "bg-green-100 text-green-800 hover:bg-green-200",
         };
       case "em_andamento":
-      default:
+
         return {
           label: "Em andamento",
           variant: "secondary" as const,
@@ -521,23 +585,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             </CardTitle>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto items-center">
-              {onToggleShowCompleted && (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="showCompleted"
-                    checked={showCompleted}
-                    onCheckedChange={(checked) =>
-                      onToggleShowCompleted(checked as boolean)
-                    }
-                  />
-                  <Label
-                    htmlFor="showCompleted"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Exibir Concluídos
-                  </Label>
-                </div>
-              )}
+              {/* Toggle externo REMOVIDO, agora está dentro do menu Filtros */}
 
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -573,34 +621,68 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
+
+                  <div className="px-2 py-2">
+                    <div className="text-sm font-medium mb-2">Status</div>
+                    <RadioGroup 
+                      value={selectedFilters.status || "em_andamento"}
+                      onValueChange={(val: string) => onFilterChange("status", val)}
+                      className="gap-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="em_andamento" id="r-andamento" />
+                        <Label htmlFor="r-andamento">Em Andamento</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="concluido" id="r-concluido" />
+                        <Label htmlFor="r-concluido">Concluídos</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="todos" id="r-todos" />
+                        <Label htmlFor="r-todos">Todos</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <DropdownMenuSeparator />
+
                   {renderFilterSubMenu(
                     "objeto",
                     "Objeto",
                     filterOptions.objetos,
                   )}
 
-                  {renderFilterSubMenu(
-                    "status",
-                    "Status",
-                    filterOptions.status,
-                  )}
+                  {/* Status removido daqui pois agora tem seção própria com RadioGroup */}
 
                   {renderFilterSubMenu("setor", "Setor", filterOptions.setores)}
-
-                  {renderFilterSubMenu(
-                    "credor",
-                    "Credor",
-                    filterOptions.credores,
-                  )}
+                  
+                  {/* Credor removido, mantendo apenas os solicitados: Status, Objeto, Setor, Período */}
 
                   <DropdownMenuSeparator />
 
                   <div className="px-2 py-2">
                     <div className="text-sm font-medium mb-2">
-                      Período de Entrada
+                      Filtro por Período
+                    </div>
+
+                    {/* Seletor de Tipo de Data */}
+                    <div className="mb-3">
+                      <Label className="text-xs text-slate-500 mb-1 block">Filtrar por:</Label>
+                      <Select
+                        value={selectedFilters.dateField || "data_entrada"}
+                        onValueChange={(val: string) => onFilterChange("dateField", val)}
+                      >
+                        <SelectTrigger className="h-8 text-xs w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="data_entrada">Chegada no Setor</SelectItem>
+                          <SelectItem value="data_docgo">Data de Criação (DocGO)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="mb-2">
+
                       <div className="text-xs text-slate-600 mb-1">
                         Data início:
                       </div>
@@ -610,22 +692,21 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           <Input
                             type="date"
                             placeholder="Data início"
-                            value={selectedFilters.data_inicio || ""}
-                            onChange={(e) =>
-                              onFilterChange(
-                                "data_inicio",
-                                e.target.value || null,
-                              )
-                            }
+                            value={localStartDate}
+                            onChange={(e) => setLocalStartDate(e.target.value)}
                             className="pl-7 h-8 text-xs"
                             disabled={isLoading}
                           />
                         </div>
-                        {selectedFilters.data_inicio && (
+                        {localStartDate && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onFilterChange("data_inicio", null)}
+                            onClick={() => {
+                              setLocalStartDate("");
+                              // Dispara imediatamente ao limpar
+                              onFilterChange("data_inicio", null); 
+                            }}
                             className="h-6 w-6 p-0"
                           >
                             <X className="w-3 h-3" />
@@ -644,20 +725,21 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           <Input
                             type="date"
                             placeholder="Data fim"
-                            value={selectedFilters.data_fim || ""}
-                            onChange={(e) =>
-                              onFilterChange("data_fim", e.target.value || null)
-                            }
+                            value={localEndDate}
+                            onChange={(e) => setLocalEndDate(e.target.value)}
                             className="pl-7 h-8 text-xs"
                             disabled={isLoading}
-                            min={selectedFilters.data_inicio || undefined}
+                            min={localStartDate || undefined}
                           />
                         </div>
-                        {selectedFilters.data_fim && (
+                        {localEndDate && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onFilterChange("data_fim", null)}
+                            onClick={() => {
+                              setLocalEndDate("");
+                              onFilterChange("data_fim", null);
+                            }}
                             className="h-6 w-6 p-0"
                           >
                             <X className="w-3 h-3" />
@@ -721,7 +803,9 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             <div className="flex flex-wrap gap-2 mt-2">
               <div className="text-sm text-slate-600">Filtros ativos:</div>
               {Object.entries(selectedFilters).map(([key, value]) => {
-                if (!value) return null;
+                if (!value || key === "dateField") return null; 
+                // Não mostrar status se for o padrão 'em_andamento'
+                if (key === "status" && value === "em_andamento") return null;
 
                 const labels = {
                   objeto: "Objeto",
@@ -733,13 +817,22 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   data_fim: "Data fim",
                 };
 
+                // Adicionar contexto de data aos labels de data
+                let displayLabel = labels[key as keyof typeof labels];
+                if ((key === "data_inicio" || key === "data_fim") && selectedFilters.dateField) {
+                  const dateFieldLabel = selectedFilters.dateField === "data_docgo" 
+                    ? "Data de Criação (DocGO)" 
+                    : "Chegada no Setor";
+                  displayLabel = `${labels[key as keyof typeof labels]} (${dateFieldLabel})`;
+                }
+
                 return (
                   <Badge
                     key={key}
                     variant="secondary"
                     className="flex items-center gap-1"
                   >
-                    {labels[key as keyof typeof labels]}:{" "}
+                    {displayLabel}:{" "}
                     {key === "data_inicio" || key === "data_fim"
                       ? formatDateLocal(value)
                       : value}
@@ -767,23 +860,13 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
 
-                  <SortableHeader
-                    field="numero_processo"
-                    sortConfig={sortConfig}
-                    onSort={onSort}
-                    className="w-28 min-w-28"
-                  >
+                  <TableHead className="w-28 min-w-28">
                     Número
-                  </SortableHeader>
+                  </TableHead>
 
-                  <SortableHeader
-                    field="objeto"
-                    sortConfig={sortConfig}
-                    onSort={onSort}
-                    className="w-32 min-w-32 max-w-[140px]"
-                  >
+                  <TableHead className="w-32 min-w-32 max-w-[140px]">
                     Objeto
-                  </SortableHeader>
+                  </TableHead>
 
                   <SortableHeader
                     field="credor"
@@ -794,23 +877,13 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     Credor
                   </SortableHeader>
 
-                  <SortableHeader
-                    field="orgao_gerador"
-                    sortConfig={sortConfig}
-                    onSort={onSort}
-                    className="w-20 min-w-20 max-w-[100px]"
-                  >
+                  <TableHead className="w-20 min-w-20 max-w-[100px]">
                     Órgão Gerador
-                  </SortableHeader>
+                  </TableHead>
 
-                  <SortableHeader
-                    field="setor_atual"
-                    sortConfig={sortConfig}
-                    onSort={onSort}
-                    className="w-32 min-w-32 max-w-[140px]"
-                  >
+                  <TableHead className="w-32 min-w-32 max-w-[140px]">
                     Setor Atual
-                  </SortableHeader>
+                  </TableHead>
 
                   <SortableHeader
                     field="dias_no_setor"
