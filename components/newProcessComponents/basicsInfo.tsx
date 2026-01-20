@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +9,7 @@ import { ManageDomainModal } from "@/components/ui/manage-domain-modal"
 import { MESES } from "@/utils/newProcessConsts"
 import { NovoProcesso } from "@/hooks/useNewProcess"
 import { useDomainManager } from "@/hooks/useDomainManager"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Edit, Lock } from "lucide-react"
 
 const STATUS_OPTIONS = [
   { value: 'em_andamento', label: 'Em andamento', color: 'bg-yellow-500' },
@@ -43,6 +43,31 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
     updateItem, 
     deleteItem 
   } = useDomainManager()
+
+  const [isManualDate, setIsManualDate] = useState(false)
+
+  useEffect(() => {
+    // Attempt auto-fill date on mount or update if not manual and empty/mismatched
+    if (!isManualDate && formData.numero_processo) {
+      const match = formData.numero_processo.trim().match(/^(\d{4})\.(\d{2})(\d{2})/)
+      if (match) {
+        const [_, year, day, month] = match
+        if (parseInt(month) >= 1 && parseInt(month) <= 12 && parseInt(day) >= 1 && parseInt(day) <= 31) {
+          const newDate = `${year}-${month}-${day}`
+          if (formData.data_criacao_docgo !== newDate) {
+            onInputChange("data_criacao_docgo", newDate)
+          }
+        }
+      } else if (!formData.numero_processo.trim() && formData.data_criacao_docgo) {
+        // Clear date if number is empty (and not just whitespace)
+         onInputChange("data_criacao_docgo", "")
+      }
+    }
+  }, [formData.numero_processo, isManualDate, onInputChange, formData.data_criacao_docgo])
+
+  const handleNumeroProcessoChange = (value: string) => {
+    onInputChange("numero_processo", value)
+  }
 
   useEffect(() => {
     loadDomain('objeto')
@@ -79,20 +104,30 @@ export const InformacoesBasicas: React.FC<InformacoesBasicasProps> = ({
             <Input
               id="numero_processo"
               value={formData.numero_processo}
-              onChange={(e) => onInputChange("numero_processo", e.target.value)}
+              onChange={(e) => handleNumeroProcessoChange(e.target.value)}
               placeholder="2025.12345678912.PG.PMP"
               className={`bg-slate-50 ${getErrorClass("numero_processo")}`}
             />
             {renderError("numero_processo")}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="data_criacao_docgo">Data de Criação (DocGO)</Label>
+            <button
+              type="button"
+              onClick={() => setIsManualDate(!isManualDate)}
+              className="absolute top-0 right-0 text-gray-500 hover:text-blue-600 transition-colors p-0.5"
+              title={isManualDate ? "Bloquear edição automática" : "Editar data manualmente"}
+            >
+              {isManualDate ? <Lock className="w-3 h-3" /> : <Edit className="w-3 h-3" />}
+            </button>
             <Input
               id="data_criacao_docgo"
               type="date"
               value={formData.data_criacao_docgo || ""}
               onChange={(e) => onInputChange("data_criacao_docgo", e.target.value)}
+              disabled={!isManualDate}
+              className={!isManualDate ? "bg-slate-100 cursor-not-allowed" : ""}
             />
           </div>
 

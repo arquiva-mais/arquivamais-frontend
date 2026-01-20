@@ -676,7 +676,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="data_entrada">Chegada no Setor</SelectItem>
-                          <SelectItem value="data_docgo">Data de Criação (DocGO)</SelectItem>
+                          <SelectItem value="data_criacao_docgo">Data de Criação (DocGO)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -820,10 +820,10 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 // Adicionar contexto de data aos labels de data
                 let displayLabel = labels[key as keyof typeof labels];
                 if ((key === "data_inicio" || key === "data_fim") && selectedFilters.dateField) {
-                  const dateFieldLabel = selectedFilters.dateField === "data_docgo" 
+                  const dateFieldLabel = selectedFilters.dateField === "data_criacao_docgo" 
                     ? "Data de Criação (DocGO)" 
                     : "Chegada no Setor";
-                  displayLabel = `${labels[key as keyof typeof labels]} (${dateFieldLabel})`;
+                  displayLabel = `${displayLabel} (${dateFieldLabel})`;
                 }
 
                 return (
