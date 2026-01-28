@@ -54,6 +54,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Processo {
   id?: number;
@@ -214,6 +215,9 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [availableSectors, setAvailableSectors] = useState<string[]>([]);
+  
+  // Hook de permissões hierárquicas
+  const { canCreate, canEdit, canTramitar } = usePermissions();
   
   // States para debounce das datas
   const [localStartDate, setLocalStartDate] = useState(selectedFilters.data_inicio || "");
@@ -778,7 +782,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {["admin", "user"].includes(userRole) && (
+              {canCreate && (
                 <Button
                   onClick={handleLoadingPage}
                   className="w-full sm:w-32 md:w-auto cursor-pointer"
@@ -914,7 +918,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
                       {Array.from({
-                        length: ["admin", "user"].includes(userRole) ? 9 : 8,
+                        length: canEdit ? 9 : 8,
                       }).map((_, cellIndex) => (
                         <TableCell key={cellIndex}>
                           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -925,7 +929,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 ) : processos.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={["admin", "user"].includes(userRole) ? 9 : 8}
+                      colSpan={canEdit ? 9 : 8}
                       className="text-center py-8 text-slate-500"
                     >
                       {searchTerm || hasActiveFilters
@@ -1013,7 +1017,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         className="w-32 min-w-32 max-w-[140px]"
                         title={processo.setor_atual}
                       >
-                        {editingSectorId === processo.id ? (
+                        {canTramitar && editingSectorId === processo.id ? (
                           <div className="w-full min-w-[140px]">
                             <SearchableSelect
                               options={availableSectors}
@@ -1026,7 +1030,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                               className="text-xs"
                             />
                           </div>
-                        ) : (
+                        ) : canTramitar ? (
                           <Button
                             variant="ghost"
                             className="h-auto p-0 hover:bg-transparent w-full justify-start truncate"
@@ -1042,6 +1046,10 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                               <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
                             </Badge>
                           </Button>
+                        ) : (
+                          <Badge variant="outline" className="truncate max-w-full">
+                            <span className="truncate">{processo.setor_atual}</span>
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell className="w-20 min-w-20 text-center">
@@ -1079,7 +1087,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                               />
                             );
                           })()}
-                          {["admin", "user"].includes(userRole) && (
+                          {canEdit && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1095,7 +1103,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     </TableRow>,
                     <TableRow key={`details-${processo.id || index}`}>
                       <TableCell
-                        colSpan={["admin", "user"].includes(userRole) ? 10 : 9}
+                        colSpan={canEdit ? 10 : 9}
                         className="p-0"
                       >
                         <ProcessDetails

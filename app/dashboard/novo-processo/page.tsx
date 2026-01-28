@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DeleteModal } from "@/components/ui/modalDelete"
-import { Loader2, Save } from "lucide-react"
+import { Loader2, Save, ShieldAlert } from "lucide-react"
 import Link from "next/link"
 import { ProcessoHeader } from "@/components/newProcessComponents/headerNewProcess"
 import { InformacoesBasicas } from "@/components/newProcessComponents/basicsInfo"
 import { ValoresProcesso } from "@/components/newProcessComponents/valueProcess"
 import { useNewProcess } from "@/hooks/useNewProcess"
 import { useToast } from "@/components/providers/toastProvider"
+import { usePermissions } from "@/hooks/usePermissions"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Componente de Loading
 function LoadingPage() {
@@ -22,6 +24,35 @@ function LoadingPage() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
         <p className="mt-4 text-gray-600">Carregando página...</p>
       </div>
+    </div>
+  )
+}
+
+// Componente de Acesso Negado
+function AccessDenied({ action }: { action: string }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader className="text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+            <ShieldAlert className="h-8 w-8 text-red-600" />
+          </div>
+          <CardTitle className="text-xl text-red-600">Acesso Negado</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-slate-600">
+            Você não tem permissão para {action}.
+          </p>
+          <p className="text-sm text-slate-500">
+            Entre em contato com um administrador se você acredita que deveria ter acesso a esta funcionalidade.
+          </p>
+          <Link href="/dashboard">
+            <Button className="w-full mt-4">
+              Voltar ao Dashboard
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -46,6 +77,9 @@ function NovoProcessoPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDeletedClick, setIsDeletedClick] = useState(false)
   const isEditMode = searchParams.get('mode') === 'edit';
+  
+  // Hook de permissões hierárquicas
+  const { canCreate, canEdit, canDelete, isLoading: permissionsLoading } = usePermissions();
 
   const validateStatus = (status: string | null): 'em_andamento' | 'concluido' | 'cancelado' => {
     if (status === 'em_andamento' || status === 'concluido' || status === 'cancelado') {
@@ -105,6 +139,21 @@ function NovoProcessoPageContent() {
       return
     }
   }, [router])
+
+  // Verificar permissões após carregamento
+  if (permissionsLoading) {
+    return <LoadingPage />
+  }
+
+  // Verificar permissão para criar (se não for modo edição)
+  if (!isEditMode && !canCreate) {
+    return <AccessDenied action="criar novos processos" />
+  }
+
+  // Verificar permissão para editar (se for modo edição)
+  if (isEditMode && !canEdit) {
+    return <AccessDenied action="editar processos" />
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -230,12 +279,14 @@ function NovoProcessoPageContent() {
             </Link>
             {isEditMode ? (
               <>
-                <Button
-                  type="button"
-                  onClick={handleDelete}
-                  className="w-full sm:w-auto cursor-pointer bg-red-500 text-white hover:bg-red-800 duration-500">
-                  Excluir
-                </Button>
+                {canDelete && (
+                  <Button
+                    type="button"
+                    onClick={handleDelete}
+                    className="w-full sm:w-auto cursor-pointer bg-red-500 text-white hover:bg-red-800 duration-500">
+                    Excluir
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   disabled={loading}
