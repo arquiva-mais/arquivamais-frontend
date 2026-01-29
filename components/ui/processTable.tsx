@@ -47,7 +47,7 @@ import { ProcessDetails } from "./processDetails";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import api, { setoresApi, processosApi } from "@/services/api";
 import { useToast } from "@/components/providers/toastProvider";
-import { AlertTriangle, Flag, MoreHorizontal } from "lucide-react";
+import { AlertTriangle, AlertCircle, CircleAlert, MoreHorizontal } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -254,7 +254,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             showNotification("Data fim limpa para manter consistência", "warning");
         }
       }
-    }, 800); // 800ms debounce
+    }, 800); // 800ms debounceVisual: ❗ dentro de um círculo
     return () => clearTimeout(timer);
   }, [localStartDate, selectedFilters.data_inicio, onFilterChange, localEndDate, showNotification]);
 
@@ -1016,9 +1016,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                           {/* Ícone de Prioridade */}
                           {processo.is_priority && (
                             <span title="Processo Prioritário">
-                              <Flag 
-                                className="w-4 h-4 text-red-600 flex-shrink-0" 
-                                fill="currentColor"
+                              <CircleAlert
+                                className="w-4 h-4 text-red-600 flex-shrink-0"
                               />
                             </span>
                           )}
@@ -1184,7 +1183,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                                     disabled={updatingPriority === processo.id}
                                     className="cursor-pointer"
                                   >
-                                    <Flag className={`w-4 h-4 mr-2 ${processo.is_priority ? "text-red-600" : ""}`} />
+                                    <CircleAlert className={`w-4 h-4 mr-2 ${processo.is_priority ? "text-red-600" : ""}`} />
                                     {processo.is_priority ? "Remover Prioridade" : "Marcar como Prioritário"}
                                   </DropdownMenuItem>
                                 </>
