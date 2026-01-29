@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -44,9 +45,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProcessDetails } from "./processDetails";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import api, { setoresApi } from "@/services/api";
+import api, { setoresApi, processosApi } from "@/services/api";
 import { useToast } from "@/components/providers/toastProvider";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Flag, MoreHorizontal } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -79,6 +80,7 @@ interface Processo {
   createdAt?: string;
   data_atualizacao?: string;
   dias_no_setor?: number;
+  is_priority?: boolean;
 }
 
 interface FilterOptions {
@@ -98,6 +100,7 @@ interface SelectedFilters {
   data_inicio: string | null;
   data_fim: string | null;
   dateField?: string | null;
+  filterPriority?: boolean;
 }
 
 interface ProcessosTableProps {
@@ -120,7 +123,7 @@ interface ProcessosTableProps {
   selectedFilters: SelectedFilters;
   onFilterChange: (
     filterType: keyof SelectedFilters,
-    value: string | null,
+    value: string | boolean | null,
   ) => void;
   sortConfig?: { field: string; direction: "asc" | "desc" };
   onSort?: (field: string) => void;
@@ -215,9 +218,10 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [availableSectors, setAvailableSectors] = useState<string[]>([]);
+  const [updatingPriority, setUpdatingPriority] = useState<number | null>(null);
   
   // Hook de permissões hierárquicas
-  const { canCreate, canEdit, canTramitar } = usePermissions();
+  const { canCreate, canEdit, canTramitar, canPrioritize } = usePermissions();
   
   // States para debounce das datas
   const [localStartDate, setLocalStartDate] = useState(selectedFilters.data_inicio || "");
@@ -426,6 +430,9 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   ) => {
     const selectedValue = selectedFilters[filterType];
 
+    // Não renderiza submenu para filterPriority (é boolean, não string[])
+    if (filterType === "filterPriority") return null;
+
     const getStatusLabel = (status: string) => {
       switch (status) {
         case "em_andamento":
@@ -442,7 +449,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
         <DropdownMenuSubTrigger>
           <div className="flex items-center justify-between w-full">
             <span>{label}</span>
-            {selectedValue && (
+            {selectedValue && typeof selectedValue === "string" && (
               <div className="flex items-center gap-1">
                 <Badge variant="secondary" className="text-xs">
                   {filterType === "status"
@@ -473,6 +480,31 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
         </DropdownMenuSubContent>
       </DropdownMenuSub>
     );
+  };
+
+  // Handler para toggle de prioridade
+  const handleTogglePriority = async (processo: Processo) => {
+    if (!processo.id) return;
+    
+    setUpdatingPriority(processo.id);
+    try {
+      const newPriority = !processo.is_priority;
+      await processosApi.definirPrioridade(processo.id, newPriority);
+      showNotification(
+        newPriority ? "Processo marcado como prioritário" : "Prioridade removida",
+        "success"
+      );
+      // Atualiza a lista
+      onRefresh?.();
+    } catch (error: any) {
+      console.error("Erro ao alterar prioridade:", error);
+      showNotification(
+        error.response?.data?.error || "Erro ao alterar prioridade",
+        "error"
+      );
+    } finally {
+      setUpdatingPriority(null);
+    }
   };
 
   const handleEditProcess = (processo: Processo) => {
@@ -647,6 +679,21 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         <Label htmlFor="r-todos">Todos</Label>
                       </div>
                     </RadioGroup>
+                  </div>
+                  <DropdownMenuSeparator />
+
+                  {/* Filtro de Prioridade */}
+                  <div className="px-2 py-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="filter-priority" className="text-sm font-medium">
+                        Apenas Prioritários
+                      </Label>
+                      <Switch
+                        id="filter-priority"
+                        checked={selectedFilters.filterPriority || false}
+                        onCheckedChange={(checked: boolean) => onFilterChange("filterPriority", checked ? true : null)}
+                      />
+                    </div>
                   </div>
                   <DropdownMenuSeparator />
 
@@ -910,7 +957,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                     Valor Total
                   </SortableHeader>
 
-                  <TableHead className="w-16 text-center"></TableHead>
+                  <TableHead className="w-20 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -918,7 +965,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   Array.from({ length: 5 }).map((_, index) => (
                     <TableRow key={index}>
                       {Array.from({
-                        length: canEdit ? 9 : 8,
+                        length: 9,
                       }).map((_, cellIndex) => (
                         <TableCell key={cellIndex}>
                           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -929,7 +976,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 ) : processos.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={canEdit ? 9 : 8}
+                      colSpan={9}
                       className="text-center py-8 text-slate-500"
                     >
                       {searchTerm || hasActiveFilters
@@ -941,7 +988,11 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                   processos.flatMap((processo, index) => [
                     <TableRow
                       key={`main-${processo.id || index}`}
-                      className="hover:bg-slate-50"
+                      className={`hover:bg-slate-50 ${
+                        processo.is_priority 
+                          ? "border-l-4 border-l-red-600 bg-red-50 hover:bg-red-100" 
+                          : ""
+                      }`}
                     >
                       <TableCell>
                         <Button
@@ -962,6 +1013,15 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                         title={processo.numero_processo}
                       >
                         <div className="flex items-center gap-2">
+                          {/* Ícone de Prioridade */}
+                          {processo.is_priority && (
+                            <span title="Processo Prioritário">
+                              <Flag 
+                                className="w-4 h-4 text-red-600 flex-shrink-0" 
+                                fill="currentColor"
+                              />
+                            </span>
+                          )}
                           {processo.link_processo ? (
                             <a
                               href={processo.link_processo}
@@ -1066,8 +1126,10 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                       >
                         {formatCurrency(getTotalValue(processo))}
                       </TableCell>
-                      <TableCell className="w-16 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      {/* Coluna de Ações */}
+                      <TableCell className="w-20 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* Indicador de Status */}
                           {(() => {
                             const statusColors: Record<string, string> = {
                               em_andamento: "bg-yellow-500",
@@ -1087,23 +1149,54 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                               />
                             );
                           })()}
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditProcess(processo)}
-                              className="h-6 w-6 p-0 hover:bg-slate-200 transition-colors duration-200"
-                              title="Editar"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                          )}
+                          
+                          {/* Menu de Ações */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 hover:bg-slate-200 transition-colors duration-200"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                                <span className="sr-only">Abrir menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              
+                              {canEdit && (
+                                <DropdownMenuItem
+                                  onClick={() => handleEditProcess(processo)}
+                                  className="cursor-pointer"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Editar Processo
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {canPrioritize && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleTogglePriority(processo)}
+                                    disabled={updatingPriority === processo.id}
+                                    className="cursor-pointer"
+                                  >
+                                    <Flag className={`w-4 h-4 mr-2 ${processo.is_priority ? "text-red-600" : ""}`} />
+                                    {processo.is_priority ? "Remover Prioridade" : "Marcar como Prioritário"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>,
                     <TableRow key={`details-${processo.id || index}`}>
                       <TableCell
-                        colSpan={canEdit ? 10 : 9}
+                        colSpan={9}
                         className="p-0"
                       >
                         <ProcessDetails

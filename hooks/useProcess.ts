@@ -23,6 +23,7 @@ interface Processo {
   update_for?: string
   createdAt?: string
   data_atualizacao?: string
+  is_priority?: boolean
 }
 
 interface PaginationInfo {
@@ -57,6 +58,7 @@ interface ProcessFilters {
   data_fim?: string
   orgao_id?: string
   dateField?: string
+  filterPriority?: boolean
 }
 interface SortConfig {
   field: string
@@ -183,6 +185,9 @@ export const useProcess = () => {
       }
       if (filters.orgao_id) {
         params.append('orgao_id', filters.orgao_id)
+      }
+      if (filters.filterPriority) {
+        params.append('filterPriority', 'true')
       }
       if (sort.field) {
         params.append('sortBy', sort.field)

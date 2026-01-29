@@ -262,4 +262,20 @@ export const setoresApi = {
    }
 }
 
+// API de Processos - Prioridade
+export const processosApi = {
+   /**
+    * Define a prioridade de um processo
+    * @param id - ID do processo
+    * @param isPriority - true = prioritário, false = normal
+    */
+   definirPrioridade: async (id: number, isPriority: boolean) => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.patch(`/processos/${id}/prioridade`, { isPriority }, {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   }
+}
+
 export default api;

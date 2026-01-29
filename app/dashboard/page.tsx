@@ -81,11 +81,13 @@ function DashboardContent() {
     if (filters.data_fim) backendFilters.data_fim = filters.data_fim
     // Sempre enviar dateField, usando o valor selecionado ou o padrão
     backendFilters.dateField = filters.dateField || 'data_entrada'
+    // Filtro de prioridade
+    if (filters.filterPriority) backendFilters.filterPriority = true
 
     return backendFilters
   }
 
-  const handleFilterChange = (filterType: keyof SelectedFilters, value: string | null) => {
+  const handleFilterChange = (filterType: keyof SelectedFilters, value: string | boolean | null) => {
     const newFilters = {
       ...selectedFilters,
       [filterType]: value
@@ -223,6 +225,7 @@ interface SelectedFilters {
   data_inicio: string | null
   data_fim: string | null
   dateField: string | null
+  filterPriority?: boolean
 }
 
 export default function DashboardPage() {
