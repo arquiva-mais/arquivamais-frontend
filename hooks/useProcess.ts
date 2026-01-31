@@ -16,7 +16,7 @@ interface Processo {
   link_processo?: string
   descricao: string
   observacao: string
-  valor_convenio: number
+  outros_valores: number
   valor_recurso_proprio: number
   valor_royalties: number
   status: 'em_andamento' | 'concluido'
@@ -35,7 +35,7 @@ interface PaginationInfo {
 
 interface AllProcessosResponse {
   status: string
-  valor_convenio: number
+  outros_valores: number
   valor_recurso_proprio: number
   valor_royalties: number
   total: number
@@ -93,7 +93,7 @@ export const useProcess = () => {
     total: 0,
     concluidos: 0,
     emAndamento: 0,
-    totalValorConvenio: 0,
+    totalOutrosValores: 0,
     totalValorRecursoProprio: 0,
     totalValorRoyalties: 0
   })
@@ -109,12 +109,12 @@ export const useProcess = () => {
 
   const calcularTotaisFinanceirosProcessos = (processos: AllProcessosResponse[]) => {
     return processos.reduce((acc, processo) => {
-      acc.totalValorConvenio += processo.valor_convenio || 0
+      acc.totalOutrosValores += processo.outros_valores || 0
       acc.totalValorRecursoProprio += processo.valor_recurso_proprio || 0
       acc.totalValorRoyalties += processo.valor_royalties || 0
       return acc
     }, {
-      totalValorConvenio: 0,
+      totalOutrosValores: 0,
       totalValorRecursoProprio: 0,
       totalValorRoyalties: 0
     })
@@ -264,7 +264,7 @@ export const useProcess = () => {
         total: 0,
         concluidos: 0,
         emAndamento: 0,
-        totalValorConvenio: 0,
+        totalOutrosValores: 0,
         totalValorRecursoProprio: 0,
         totalValorRoyalties: 0
       })
