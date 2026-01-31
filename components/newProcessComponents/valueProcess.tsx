@@ -22,13 +22,13 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
       <CardContent className="space-y-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="valor_convenio">Valor Convênio</Label>
+            <Label htmlFor="valor_royalties">Valor Royalties</Label>
             <Input
-              id="valor_convenio"
+              id="valor_royalties"
               type="number"
               step="0.01"
-              value={formData.valor_convenio === 0 ? "" : formData.valor_convenio}
-              onChange={(e) => onNumberChange("valor_convenio", e.target.value)}
+              value={formData.valor_royalties === 0 ? "" : formData.valor_royalties}
+              onChange={(e) => onNumberChange("valor_royalties", e.target.value)}
               placeholder="0.00"
             />
           </div>
@@ -44,13 +44,13 @@ export const ValoresProcesso: React.FC<ValoresProcessoProps> = ({
             />
           </div>
           <div className="flex-1 space-y-2">
-            <Label htmlFor="valor_royalties">Valor Royalties</Label>
+            <Label htmlFor="outros_valores">Outros Valores</Label>
             <Input
-              id="valor_royalties"
+              id="outros_valores"
               type="number"
               step="0.01"
-              value={formData.valor_royalties === 0 ? "" : formData.valor_royalties}
-              onChange={(e) => onNumberChange("valor_royalties", e.target.value)}
+              value={formData.outros_valores === 0 ? "" : formData.outros_valores}
+              onChange={(e) => onNumberChange("outros_valores", e.target.value)}
               placeholder="0.00"
             />
           </div>

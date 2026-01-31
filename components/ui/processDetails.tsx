@@ -15,7 +15,7 @@ interface Processo {
    link_processo?: string
    descricao: string
    observacao: string
-   valor_convenio: number
+   outros_valores: number
    valor_recurso_proprio: number
    valor_royalties: number
    status: 'em_andamento' | 'concluido' | 'cancelado'
@@ -62,7 +62,7 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
    }
 
    const getTotalValue = (processo: Processo) => {
-      return processo.valor_convenio + processo.valor_recurso_proprio + processo.valor_royalties
+      return processo.valor_royalties + processo.valor_recurso_proprio + processo.outros_valores
    }
 
    return (
@@ -159,16 +159,16 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                <div className="space-y-3 animate-fadeIn animation-delay-200">
                   <h4 className="font-semibold text-gray-800 border-b pb-1">Valores Financeiros</h4>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Valor Convênio:</span>
-                     <p className="text-sm font-medium text-blue-600">{formatCurrency(processo.valor_convenio)}</p>
+                     <span className="text-sm font-medium text-gray-600">Royalties:</span>
+                     <p className="text-sm font-medium text-purple-600">{formatCurrency(processo.valor_royalties)}</p>
                   </div>
                   <div>
                      <span className="text-sm font-medium text-gray-600">Recurso Próprio:</span>
                      <p className="text-sm font-medium text-green-600">{formatCurrency(processo.valor_recurso_proprio)}</p>
                   </div>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Royalties:</span>
-                     <p className="text-sm font-medium text-purple-600">{formatCurrency(processo.valor_royalties)}</p>
+                     <span className="text-sm font-medium text-gray-600">Outros Valores:</span>
+                     <p className="text-sm font-medium text-blue-600">{formatCurrency(processo.outros_valores)}</p>
                   </div>
                   <div className="pt-2 border-t">
                      <span className="text-sm font-medium text-gray-600">Valor Total:</span>

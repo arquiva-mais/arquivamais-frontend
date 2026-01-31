@@ -16,7 +16,7 @@ export interface NovoProcesso {
   link_processo: string
   descricao: string
   observacao: string
-  valor_convenio: number
+  outros_valores: number
   valor_recurso_proprio: number
   valor_royalties: number
   status: 'em_andamento' | 'concluido' | 'cancelado'
@@ -35,7 +35,7 @@ const initialFormData: NovoProcesso = {
   link_processo: "",
   descricao: "",
   observacao: "",
-  valor_convenio: 0,
+  outros_valores: 0,
   valor_recurso_proprio: 0,
   valor_royalties: 0,
   status: 'em_andamento'
@@ -216,7 +216,7 @@ export const useNewProcess = () => {
   }
 
   const getTotalValue = () => {
-    return (formData.valor_convenio || 0) + (formData.valor_recurso_proprio || 0) + (formData.valor_royalties || 0)
+    return (formData.valor_royalties || 0) + (formData.valor_recurso_proprio || 0) + (formData.outros_valores || 0)
   }
 
   return {

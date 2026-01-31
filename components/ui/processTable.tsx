@@ -72,7 +72,7 @@ interface Processo {
   link_processo?: string;
   descricao: string;
   observacao: string;
-  valor_convenio: number;
+  outros_valores: number;
   valor_recurso_proprio: number;
   valor_royalties: number;
   status: "em_andamento" | "concluido";
@@ -299,7 +299,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     newSector: string;
     currentSector: string;
     originalValues: {
-      valor_convenio: number;
+      outros_valores: number;
       valor_recurso_proprio: number;
       valor_royalties: number;
     };
@@ -320,7 +320,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       newSector,
       currentSector: processo.setor_atual,
       originalValues: {
-        valor_convenio: processo.valor_convenio,
+        outros_valores: processo.outros_valores,
         valor_recurso_proprio: processo.valor_recurso_proprio,
         valor_royalties: processo.valor_royalties,
       },
@@ -378,9 +378,9 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 
   const getTotalValue = (processo: Processo) => {
     return (
-      processo.valor_convenio +
+      processo.valor_royalties +
       processo.valor_recurso_proprio +
-      processo.valor_royalties
+      processo.outros_valores
     );
   };
 
@@ -522,7 +522,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
       link_processo: processo.link_processo || "",
       descricao: processo.descricao,
       observacao: processo.observacao,
-      valor_convenio: processo.valor_convenio.toString(),
+      outros_valores: processo.outros_valores.toString(),
       valor_recurso_proprio: processo.valor_recurso_proprio.toString(),
       valor_royalties: processo.valor_royalties.toString(),
       status: processo.status,

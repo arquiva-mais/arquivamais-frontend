@@ -7,7 +7,7 @@ interface StatsCardsProps {
   processosConcluidos: number
   processosEmAndamento: number
   processosCancelados: number
-  totalValorConvenio: number
+  totalOutrosValores: number
   totalValorRecursoProprio: number
   totalValorRoyalties: number
 }
@@ -17,7 +17,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
   processosConcluidos,
   processosEmAndamento,
   processosCancelados,
-  totalValorConvenio,
+  totalOutrosValores,
   totalValorRecursoProprio,
   totalValorRoyalties
 }) => {
@@ -32,8 +32,8 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
 
   const pieData = [
     {
-      name: 'Convênio',
-      value: totalValorConvenio,
+      name: 'Outros Valores',
+      value: totalOutrosValores,
       color: '#3b82f6'
     },
     {
@@ -48,7 +48,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
     }
   ]
 
-  const totalGeral = totalValorConvenio + totalValorRecursoProprio + totalValorRoyalties
+  const totalGeral = totalOutrosValores + totalValorRecursoProprio + totalValorRoyalties
 
   return (
     <div className="space-y-6 mb-8">
@@ -133,10 +133,10 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs text-slate-600">Convênio</span>
+                        <span className="text-xs text-slate-600">Outros Valores</span>
                       </div>
                       <span className="text-xs font-medium text-slate-800">
-                        {formatCurrency(totalValorConvenio)}
+                        {formatCurrency(totalOutrosValores)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

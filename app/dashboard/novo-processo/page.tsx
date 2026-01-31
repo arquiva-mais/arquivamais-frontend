@@ -104,7 +104,7 @@ function NovoProcessoPageContent() {
         link_processo: searchParams.get('link_processo') || '',
         descricao: searchParams.get('descricao') || '',
         observacao: searchParams.get('observacao') || '',
-        valor_convenio: parseFloat(searchParams.get('valor_convenio') || '0'),
+        outros_valores: parseFloat(searchParams.get('outros_valores') || '0'),
         valor_recurso_proprio: parseFloat(searchParams.get('valor_recurso_proprio') || '0'),
         valor_royalties: parseFloat(searchParams.get('valor_royalties') || '0'),
         status: validateStatus(searchParams.get('status')),
@@ -125,7 +125,7 @@ function NovoProcessoPageContent() {
       link_processo: '',
       descricao: '',
       observacao: '',
-      valor_convenio: 0,
+      outros_valores: 0,
       valor_recurso_proprio: 0,
       valor_royalties: 0,
       status: 'em_andamento' as const,
@@ -226,9 +226,9 @@ function NovoProcessoPageContent() {
   };
 
   const getEditTotalValue = () => {
-    return (editFormData.valor_convenio || 0) +
+    return (editFormData.valor_royalties || 0) +
       (editFormData.valor_recurso_proprio || 0) +
-      (editFormData.valor_royalties || 0);
+      (editFormData.outros_valores || 0);
   };
 
   return (
