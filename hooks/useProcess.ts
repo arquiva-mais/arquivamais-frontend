@@ -275,22 +275,22 @@ export const useProcess = () => {
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= pagination.totalPages) {
-      fetchProcessos(page, searchTerm, currentFilters)
+      fetchProcessos(page, searchTerm, currentFilters, sortConfig)
     }
   }
   const searchProcessos = (term: string) => {
     setSearchTerm(term)
-    fetchProcessos(1, term, currentFilters)
+    fetchProcessos(1, term, currentFilters, sortConfig)
   }
 
   const applyFilters = (filters: ProcessFilters, page: number = 1) => {
     setCurrentFilters(filters)
-    fetchProcessos(page, searchTerm, filters)
+    fetchProcessos(page, searchTerm, filters, sortConfig)
   }
 
   const clearFilters = () => {
     setCurrentFilters({})
-    fetchProcessos(1, searchTerm, {})
+    fetchProcessos(1, searchTerm, {}, sortConfig)
   }
 
   const nextPage = () => {
@@ -345,7 +345,7 @@ export const useProcess = () => {
     fetchProcessos,
     applyFilters,
     clearFilters,
-    refetch: () => fetchProcessos(pagination?.currentPage || 1, searchTerm, currentFilters)
+    refetch: () => fetchProcessos(pagination?.currentPage || 1, searchTerm, currentFilters, sortConfig)
   }
 }
 
