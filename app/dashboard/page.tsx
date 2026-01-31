@@ -163,10 +163,10 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-50">
       <DashboardHeader username={userName} onLogout={handleLogout} />
 
-      <main className="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 overflow-hidden flex flex-col max-w-[95%] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <ProcessTable
           processos={processos}

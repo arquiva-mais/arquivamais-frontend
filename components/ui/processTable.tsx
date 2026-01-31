@@ -611,8 +611,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
         }
       `}</style>
 
-      <Card>
-        <CardHeader>
+      <Card className="flex-1 flex flex-col h-full overflow-hidden">
+        <CardHeader className="flex-shrink-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 md:gap-4">
             <CardTitle className="text-base sm:text-lg md:text-xl font-semibold">
               Processos
@@ -905,8 +905,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
           )}
         </CardHeader>
 
-        <CardContent>
-          <div className="w-full">
+        <CardContent className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-auto w-full">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1211,7 +1211,7 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
           </div>
 
           {!isLoading && pagination.totalItems > 0 && (
-            <div className="flex flex-col md:flex-row items-center justify-between mt-4 gap-4">
+            <div className="flex flex-col md:flex-row items-center justify-between mt-auto pt-4 gap-4 flex-shrink-0">
               <div className="flex items-center gap-4 text-sm text-slate-600 order-2 md:order-1">
                 <div className="flex items-center gap-2">
                   <span>Itens por página:</span>
