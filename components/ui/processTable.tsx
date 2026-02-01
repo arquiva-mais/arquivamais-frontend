@@ -7,6 +7,14 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,6 +36,8 @@ import {
   ChevronUp,
   ChevronsUpDown,
   Copy,
+  UserCheck,
+  User,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useRouter } from "next/navigation";
@@ -81,6 +91,21 @@ interface Processo {
   data_atualizacao?: string;
   dias_no_setor?: number;
   is_priority?: boolean;
+  atribuido_para_usuario_id?: number | null;
+  atribuidoPara?: {
+    id: number;
+    nome: string;
+    email: string;
+    role: string;
+  } | null;
+  atribuido_por_usuario_id?: number | null;
+  atribuidoPor?: {
+    id: number;
+    nome: string;
+    email: string;
+    role: string;
+  } | null;
+  data_atribuicao?: string | null;
 }
 
 interface FilterOptions {
@@ -101,6 +126,7 @@ interface SelectedFilters {
   data_fim: string | null;
   dateField?: string | null;
   filterPriority?: boolean;
+  meusProcessos?: boolean;
 }
 
 interface ProcessosTableProps {
@@ -220,8 +246,15 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
   const [availableSectors, setAvailableSectors] = useState<string[]>([]);
   const [updatingPriority, setUpdatingPriority] = useState<number | null>(null);
   
+  // Estados para atribuição de responsável
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedProcessoForAssign, setSelectedProcessoForAssign] = useState<Processo | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<Array<{ id: number; nome: string; email: string }>>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  
   // Hook de permissões hierárquicas
-  const { canCreate, canEdit, canTramitar, canPrioritize } = usePermissions();
+  const { canCreate, canEdit, canTramitar, canPrioritize, canAssign } = usePermissions();
   
   // States para debounce das datas
   const [localStartDate, setLocalStartDate] = useState(selectedFilters.data_inicio || "");
@@ -532,6 +565,82 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
 
     router.push(`/dashboard/novo-processo?${params.toString()}`);
   };
+
+  // Funções para atribuição de responsável
+  const handleOpenAssignModal = async (processo: Processo) => {
+    setSelectedProcessoForAssign(processo);
+    setIsAssignModalOpen(true);
+    setIsLoadingUsers(true);
+    
+    try {
+      const response = await processosApi.listarUsuariosParaAtribuicao();
+      // A API retorna o array diretamente em response (já é response.data do axios)
+      setAvailableUsers(Array.isArray(response) ? response : []);
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+      showNotification("Erro ao carregar lista de usuários", "error");
+      setAvailableUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Função para limpar estilos do body que o Radix Dialog adiciona
+  const cleanupBodyStyles = () => {
+    document.body.style.pointerEvents = '';
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    // Remove atributos data que o Radix adiciona
+    document.body.removeAttribute('data-scroll-locked');
+  };
+
+  // Cleanup quando o modal fecha
+  useEffect(() => {
+    if (!isAssignModalOpen) {
+      // Delay para garantir que o Radix finalizou sua animação
+      const timer = setTimeout(() => {
+        cleanupBodyStyles();
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isAssignModalOpen]);
+
+  const handleAssignResponsavel = async (usuarioId: number | null) => {
+    if (!selectedProcessoForAssign?.id) return;
+    
+    setIsAssigning(true);
+    try {
+      await processosApi.atribuirResponsavel(selectedProcessoForAssign.id, usuarioId);
+      showNotification(
+        usuarioId 
+          ? "Responsável atribuído com sucesso!" 
+          : "Atribuição removida com sucesso!",
+        "success"
+      );
+      
+      // Fechar modal primeiro e limpar estado
+      setIsAssignModalOpen(false);
+      setSelectedProcessoForAssign(null);
+      setAvailableUsers([]);
+      
+      // Limpar estilos do body que o Radix pode ter deixado
+      cleanupBodyStyles();
+      
+      // Pequeno delay antes de atualizar para garantir que o modal fechou
+      setTimeout(() => {
+        cleanupBodyStyles(); // Garantir limpeza novamente
+        if (onRefresh) {
+          onRefresh();
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Erro ao atribuir responsável:", error);
+      showNotification("Erro ao atribuir responsável", "error");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const formatDateLocal = (dateString: string) => {
     if (!dateString) return "...";
 
@@ -622,7 +731,25 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             </CardTitle>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto items-center">
-              {/* Toggle externo REMOVIDO, agora está dentro do menu Filtros */}
+              {/* Botão Meus Processos */}
+              <Button
+                variant={selectedFilters.meusProcessos ? "default" : "outline"}
+                size="sm"
+                onClick={() => onFilterChange("meusProcessos", !selectedFilters.meusProcessos)}
+                className={`flex items-center gap-2 ${
+                  selectedFilters.meusProcessos 
+                    ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                    : "hover:bg-blue-50"
+                }`}
+                disabled={isLoading}
+              >
+                {selectedFilters.meusProcessos ? (
+                  <UserCheck className="w-4 h-4" />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">Meus Processos</span>
+              </Button>
 
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -1188,6 +1315,19 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                                   </DropdownMenuItem>
                                 </>
                               )}
+
+                              {canAssign && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenAssignModal(processo)}
+                                    className="cursor-pointer"
+                                  >
+                                    <UserCheck className={`w-4 h-4 mr-2 ${processo.atribuidoPara ? "text-blue-600" : ""}`} />
+                                    {processo.atribuidoPara ? "Alterar Responsável" : "Atribuir Responsável"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -1425,6 +1565,124 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Atribuição de Responsável */}
+      {isAssignModalOpen && (
+        <Dialog 
+          open={isAssignModalOpen} 
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsAssignModalOpen(false);
+              setSelectedProcessoForAssign(null);
+              setAvailableUsers([]);
+              cleanupBodyStyles();
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-blue-600" />
+                Atribuir Responsável
+              </DialogTitle>
+              <DialogDescription>
+                {selectedProcessoForAssign && (
+                  <span className="block mt-2">
+                    Processo: <strong>{selectedProcessoForAssign.numero_processo}</strong>
+                  </span>
+                )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {isLoadingUsers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="ml-2 text-sm text-gray-600">Carregando usuários...</span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {/* Opção para remover atribuição */}
+                <button
+                  onClick={() => handleAssignResponsavel(null)}
+                  disabled={isAssigning}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    !selectedProcessoForAssign?.atribuidoPara
+                      ? "bg-gray-100 border-gray-300"
+                      : "hover:bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-700">Sem atribuição</p>
+                    <p className="text-xs text-gray-500">Remover responsável atribuído</p>
+                  </div>
+                </button>
+
+                {/* Lista de usuários */}
+                {availableUsers.map((usuario) => (
+                  <button
+                    key={usuario.id}
+                    onClick={() => handleAssignResponsavel(usuario.id)}
+                    disabled={isAssigning}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      selectedProcessoForAssign?.atribuidoPara?.id === usuario.id
+                        ? "bg-blue-50 border-blue-300"
+                        : "hover:bg-blue-50 border-gray-200"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      selectedProcessoForAssign?.atribuidoPara?.id === usuario.id
+                        ? "bg-blue-600"
+                        : "bg-blue-100"
+                    }`}>
+                      <span className={`text-sm font-medium ${
+                        selectedProcessoForAssign?.atribuidoPara?.id === usuario.id
+                          ? "text-white"
+                          : "text-blue-600"
+                      }`}>
+                        {usuario.nome.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="text-sm font-medium text-gray-900">{usuario.nome}</p>
+                      <p className="text-xs text-gray-500">{usuario.email}</p>
+                    </div>
+                    {selectedProcessoForAssign?.atribuidoPara?.id === usuario.id && (
+                      <UserCheck className="w-4 h-4 text-blue-600" />
+                    )}
+                  </button>
+                ))}
+
+                {availableUsers.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <User className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">Nenhum usuário disponível</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAssignModalOpen(false);
+                setSelectedProcessoForAssign(null);
+                setAvailableUsers([]);
+                cleanupBodyStyles();
+              }}
+              disabled={isAssigning}
+            >
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       )}
     </>
   );

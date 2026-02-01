@@ -83,6 +83,8 @@ function DashboardContent() {
     backendFilters.dateField = filters.dateField || 'data_entrada'
     // Filtro de prioridade
     if (filters.filterPriority) backendFilters.filterPriority = true
+    // Filtro "Meus Processos"
+    if (filters.meusProcessos) backendFilters.meusProcessos = true
 
     return backendFilters
   }
@@ -226,6 +228,7 @@ interface SelectedFilters {
   data_fim: string | null
   dateField: string | null
   filterPriority?: boolean
+  meusProcessos?: boolean
 }
 
 export default function DashboardPage() {

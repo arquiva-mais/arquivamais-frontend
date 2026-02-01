@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { UserCheck, User } from "lucide-react"
 
 
 interface Processo {
@@ -25,6 +25,19 @@ interface Processo {
    data_atualizacao?: string
    data_criacao_docgo?: string
    dias_no_setor?: number
+   atribuido_para_usuario_id?: number | null
+   atribuidoPara?: {
+      id: number
+      nome: string
+      email?: string
+   } | null
+   atribuido_por_usuario_id?: number | null
+   atribuidoPor?: {
+      id: number
+      nome: string
+      email?: string
+   } | null
+   data_atribuicao?: string | null
 }
 
 interface ProcessDetailsProps {
@@ -75,11 +88,7 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
          <div className="p-4 bg-gray-50 border-t transform transition-transform duration-300 ease-in-out">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                <div className="space-y-3 animate-fadeIn">
-                  <h4 className="font-semibold text-gray-800 border-b pb-1">Informações Básicas</h4>
-                  <div>
-                     <span className="text-sm font-medium text-gray-600">Número:</span>
-                     <p className="text-sm">{processo.numero_processo}</p>
-                  </div>
+                  <h4 className="font-semibold text-gray-800 border-b pb-1">Datas</h4>
                   <div>
                      <span className="text-sm font-medium text-gray-600">Data Criação (DocGO):</span>
                      <p className="text-sm">
@@ -96,64 +105,46 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                      <span className="text-sm font-medium text-gray-600">Competência:</span>
                      <p className="text-sm">{processo.competencia}</p>
                   </div>
-                  <div>
-                     <span className="text-sm font-medium text-gray-600">Órgão Gerador:</span>
-                     <p className="text-sm">{processo.orgao_gerador}</p>
-                  </div>
                </div>
 
                <div className="space-y-3 animate-fadeIn animation-delay-100">
-                  <h4 className="font-semibold text-gray-800 border-b pb-1">Responsabilidades</h4>
+                  <h4 className="font-semibold text-gray-800 border-b pb-1">Atribuição</h4>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Setor Atual:</span>
-                     <div className="flex items-center gap-2">
-                        <p className="text-sm">{processo.setor_atual}</p>
-                        {processo.dias_no_setor !== undefined && processo.status !== 'concluido' && processo.status !== 'cancelado' && (
-                           <Badge variant={processo.dias_no_setor > 15 ? "destructive" : "secondary"} className="text-xs">
-                              {processo.dias_no_setor} dias no setor
-                           </Badge>
-                        )}
-                     </div>
+                     <span className="text-sm font-medium text-gray-600">Atribuidor:</span>
+                     {processo.atribuidoPor ? (
+                        <div className="flex items-center gap-2 mt-1">
+                           <div className="flex items-center gap-2 px-2 py-1 bg-gray-50 border border-gray-200 rounded-md">
+                              <User className="w-4 h-4 text-gray-600" />
+                              <span className="text-sm font-medium text-gray-700">
+                                 {processo.atribuidoPor.nome}
+                              </span>
+                           </div>
+                        </div>
+                     ) : (
+                        <p className="text-sm text-gray-400 italic">-</p>
+                     )}
                   </div>
                   <div>
-                     <span className="text-sm font-medium text-gray-600">Credor:</span>
-                     <p className="text-sm max-w-sm truncate" title={processo.credor || processo.interessado}>
-                        {processo.credor || processo.interessado}
-                     </p>
+                     <span className="text-sm font-medium text-gray-600">Atribuído para:</span>
+                     {processo.atribuidoPara ? (
+                        <div className="flex items-center gap-2 mt-1">
+                           <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 border border-blue-200 rounded-md">
+                              <UserCheck className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-700">
+                                 {processo.atribuidoPara.nome}
+                              </span>
+                           </div>
+                        </div>
+                     ) : (
+                        <p className="text-sm text-gray-400 italic">Sem atribuição definida</p>
+                     )}
                   </div>
-                  <div>
-                     <span className="text-sm font-medium text-gray-600">Responsável:</span>
-                     <p className="text-sm">{processo.responsavel}</p>
-                  </div>
-                  {processo.link_processo && (
+                  {processo.data_atribuicao && (
                      <div>
-                        <span className="text-sm font-medium text-gray-600">Link do Processo:</span>
-                        <a
-                           href={processo.link_processo}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline block truncate max-w-sm"
-                           title={processo.link_processo}
-                        >
-                           Acessar processo
-                        </a>
+                        <span className="text-sm font-medium text-gray-600">Data/Hora da Atribuição:</span>
+                        <p className="text-sm text-gray-700">{formatDateTime(processo.data_atribuicao)}</p>
                      </div>
                   )}
-                  <div>
-                     <span className="text-sm font-medium text-gray-600">Status:</span>
-                     <br />
-                     <Badge
-                        variant={processo.status ? "default" : "secondary"}
-                        className={`text-xs ${processo.status === 'concluido' ? "bg-green-100 text-green-800" : (processo.status == 'em_andamento' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')}`}
-                     >
-                        {processo.status === 'concluido'
-                           ? 'Concluído'
-                           : processo.status === 'em_andamento'
-                              ? 'Em andamento'
-                              : 'Cancelado'
-                        }
-                     </Badge>
-                  </div>
                </div>
 
                <div className="space-y-3 animate-fadeIn animation-delay-200">
@@ -179,13 +170,11 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                <div className="space-y-3 animate-fadeIn animation-delay-250">
                   <h4 className="font-semibold text-gray-800 border-b pb-1">Histórico</h4>
 
-                  {processo.responsavel && (
+                  {processo.responsavel && processo.createdAt && (
                      <div>
                         <span className="text-sm font-medium text-gray-600">Criado por:</span>
                         <p className="text-sm font-medium text-blue-700">{processo.responsavel}</p>
-                        {processo.createdAt && (
-                           <p className="text-xs text-gray-500">{formatDateTime(processo.createdAt)}</p>
-                        )}
+                        <p className="text-xs text-gray-500">{formatDateTime(processo.createdAt)}</p>
                      </div>
                   )}
 
@@ -199,7 +188,7 @@ export const ProcessDetails: React.FC<ProcessDetailsProps> = ({ processo, isExpa
                      </div>
                   )}
 
-                  {!processo.responsavel && !processo.update_for && (
+                  {!processo.createdAt && !processo.update_for && (
                      <div className="flex items-center justify-center h-20">
                         <p className="text-sm text-gray-400 italic">Sem informações de histórico</p>
                      </div>

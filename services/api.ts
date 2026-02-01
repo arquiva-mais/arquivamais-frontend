@@ -262,7 +262,7 @@ export const setoresApi = {
    }
 }
 
-// API de Processos - Prioridade
+// API de Processos - Prioridade e Atribuição
 export const processosApi = {
    /**
     * Define a prioridade de um processo
@@ -272,6 +272,30 @@ export const processosApi = {
    definirPrioridade: async (id: number, isPriority: boolean) => {
       const token = localStorage.getItem("authToken")
       const response = await api.patch(`/processos/${id}/prioridade`, { isPriority }, {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   },
+
+   /**
+    * Atribui um responsável a um processo
+    * @param processoId - ID do processo
+    * @param usuarioId - ID do usuário (null para remover atribuição)
+    */
+   atribuirResponsavel: async (processoId: number, usuarioId: number | null) => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.patch(`/processos/${processoId}/atribuir`, { usuarioId }, {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   },
+
+   /**
+    * Lista usuários disponíveis para atribuição (mesmo órgão)
+    */
+   listarUsuariosParaAtribuicao: async () => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.get('/processos/usuarios-atribuicao', {
          headers: { Authorization: `Bearer ${token}` }
       })
       return response.data

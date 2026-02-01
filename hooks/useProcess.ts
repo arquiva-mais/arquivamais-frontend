@@ -24,6 +24,21 @@ interface Processo {
   createdAt?: string
   data_atualizacao?: string
   is_priority?: boolean
+  atribuido_para_usuario_id?: number | null
+  atribuidoPara?: {
+    id: number
+    nome: string
+    email: string
+    role: string
+  } | null
+  atribuido_por_usuario_id?: number | null
+  atribuidoPor?: {
+    id: number
+    nome: string
+    email: string
+    role: string
+  } | null
+  data_atribuicao?: string | null
 }
 
 interface PaginationInfo {
@@ -59,6 +74,7 @@ interface ProcessFilters {
   orgao_id?: string
   dateField?: string
   filterPriority?: boolean
+  meusProcessos?: boolean
 }
 interface SortConfig {
   field: string
@@ -188,6 +204,9 @@ export const useProcess = () => {
       }
       if (filters.filterPriority) {
         params.append('filterPriority', 'true')
+      }
+      if (filters.meusProcessos) {
+        params.append('meusProcessos', 'true')
       }
       if (sort.field) {
         params.append('sortBy', sort.field)
