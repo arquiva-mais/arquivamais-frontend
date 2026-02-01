@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react"
 import { VscNewFolder } from "react-icons/vsc";
 import { Badge } from "@/components/ui/badge"
 import { usePermissions } from "@/hooks/usePermissions"
+import { NotificationBell } from "@/components/ui/NotificationBell"
 
 interface DashboardHeaderProps {
   username: string
@@ -41,42 +42,48 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ username, onLo
           <h1 className="text-xl font-semibold text-slate-900">Arquiva+</h1>
         </div>
 
-        {/* User Capsule - Direita */}
-        <div className="flex items-center bg-white border border-gray-200 rounded-full pl-2 pr-1 py-1 shadow-sm">
-          {/* Avatar com iniciais */}
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-gray-600">
-              {getInitials(username)}
-            </span>
+        {/* Área direita: Notificações + User Capsule */}
+        <div className="flex items-center gap-3">
+          {/* Sino de Notificações */}
+          <NotificationBell />
+
+          {/* User Capsule */}
+          <div className="flex items-center bg-white border border-gray-200 rounded-full pl-2 pr-1 py-1 shadow-sm">
+            {/* Avatar com iniciais */}
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-gray-600">
+                {getInitials(username)}
+              </span>
+            </div>
+
+            {/* Info: Nome + Badge */}
+            <div className="flex items-center ml-2">
+              <span className="text-sm font-medium text-gray-700">
+                {username}
+              </span>
+              {userRole && (
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-2 text-xs font-medium border-0 ${roleColors[userRole] || 'bg-gray-100 text-gray-700'}`}
+                >
+                  {roleLabel}
+                </Badge>
+              )}
+            </div>
+
+            {/* Divisor vertical */}
+            <div className="h-5 w-px bg-gray-200 mx-3" />
+
+            {/* Botão Sair - Apenas ícone */}
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
+              title="Sair do sistema"
+              aria-label="Sair do sistema"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-
-          {/* Info: Nome + Badge */}
-          <div className="flex items-center ml-2">
-            <span className="text-sm font-medium text-gray-700">
-              {username}
-            </span>
-            {userRole && (
-              <Badge 
-                variant="secondary" 
-                className={`ml-2 text-xs font-medium border-0 ${roleColors[userRole] || 'bg-gray-100 text-gray-700'}`}
-              >
-                {roleLabel}
-              </Badge>
-            )}
-          </div>
-
-          {/* Divisor vertical */}
-          <div className="h-5 w-px bg-gray-200 mx-3" />
-
-          {/* Botão Sair - Apenas ícone */}
-          <button
-            onClick={onLogout}
-            className="p-2 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
-            title="Sair do sistema"
-            aria-label="Sair do sistema"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </header>

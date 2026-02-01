@@ -431,7 +431,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
     ([key, value]) => {
       if (key === "dateField") return false;
       if (key === "status" && value === "em_andamento") return false;
-      return value !== null;
+      if (key === "meusProcessos" && value === false) return false; // Não conta meusProcessos quando desmarcado
+      return value !== null && value !== false;
     }
   ).length;
 
@@ -738,8 +739,8 @@ export const ProcessTable: React.FC<ProcessosTableProps> = ({
                 onClick={() => onFilterChange("meusProcessos", !selectedFilters.meusProcessos)}
                 className={`flex items-center gap-2 ${
                   selectedFilters.meusProcessos 
-                    ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                    : "hover:bg-blue-50"
+                    ? "bg-gray-900 hover:bg-gray-800 text-white" 
+                    : "hover:bg-gray-100"
                 }`}
                 disabled={isLoading}
               >

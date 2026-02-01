@@ -302,4 +302,55 @@ export const processosApi = {
    }
 }
 
+// Interface para notificação
+export interface Notificacao {
+   id: number
+   usuario_id: number
+   mensagem: string
+   lida: boolean
+   created_at: string
+}
+
+export interface NotificacoesResponse {
+   notificacoes: Notificacao[]
+   naoLidas: number
+}
+
+// API de Notificações
+export const notificacoesApi = {
+   /**
+    * Lista todas as notificações do usuário logado
+    */
+   listar: async (): Promise<NotificacoesResponse> => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.get('/notificacoes', {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   },
+
+   /**
+    * Marca uma notificação específica como lida
+    * @param id - ID da notificação
+    */
+   marcarComoLida: async (id: number) => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.patch(`/notificacoes/${id}/ler`, {}, {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   },
+
+   /**
+    * Marca todas as notificações como lidas
+    */
+   marcarTodasComoLidas: async () => {
+      const token = localStorage.getItem("authToken")
+      const response = await api.patch('/notificacoes/ler-todas', {}, {
+         headers: { Authorization: `Bearer ${token}` }
+      })
+      return response.data
+   }
+}
+
 export default api;
